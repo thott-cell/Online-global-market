@@ -13,6 +13,16 @@ export interface WishlistItem {
   discount?: number;
   category?: string;
 }
+export interface WishlistItem {
+  id: string;
+  title: string;
+  price: number;
+  imageUrl?: string;
+  description?: string;
+  sellerId?: string;
+  discount?: number;
+  discountedPrice?: number; // ← add this line
+}
 
 export function useWishlist() {
   const { user } = useAuth();

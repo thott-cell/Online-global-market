@@ -1,4 +1,3 @@
-// src/pages/ProductDetail.tsx
 import { useEffect, useState, useCallback } from "react";
 import { db } from "../firebase/config";
 import { doc, getDoc } from "firebase/firestore";
@@ -52,7 +51,7 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
   if (!product) return <p style={{ textAlign: "center", marginTop: 50 }}>Product not found.</p>;
 
   const discountedPrice = product.discount
-    ? product.price - product.price * (product.discount / 100)
+    ? Math.round(product.price - (product.price * product.discount) / 100)
     : product.price;
 
   const handleAddToCart = () => {
@@ -67,6 +66,7 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
       title: product.title,
       description: product.description || "",
       price: product.price,
+      discountedPrice,
       discount: product.discount || 0,
       sellerId: product.sellerId || "unknown",
       imageUrl: product.imageUrl || "",
@@ -78,7 +78,6 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
 
   return (
     <div style={{ maxWidth: 600, margin: "20px auto", padding: 16, background: "#fff", borderRadius: 10 }}>
-      {/* Back */}
       <button
         onClick={onBack}
         style={{
@@ -94,7 +93,6 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
         ← Back
       </button>
 
-      {/* Image */}
       {product.imageUrl && (
         <img
           src={product.imageUrl}
@@ -103,30 +101,36 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
         />
       )}
 
-      {/* Title */}
       <h2 style={{ marginBottom: 8, fontSize: 20 }}>{product.title}</h2>
 
-      {/* Price & Discount */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-        <span style={{ fontSize: 18, fontWeight: "bold", textDecoration: product.discount ? "line-through" : "none", color: product.discount ? "#888" : "#000" }}>
+        <span style={{
+          fontSize: 18,
+          fontWeight: "bold",
+          textDecoration: product.discount ? "line-through" : "none",
+          color: product.discount ? "#888" : "#000"
+        }}>
           {formatNaira(product.price)}
         </span>
         {product.discount && (
-          <span style={{ fontSize: 18, fontWeight: "bold", color: "green" }}>{formatNaira(discountedPrice)}</span>
+          <span style={{ fontSize: 18, fontWeight: "bold", color: "green" }}>
+            {formatNaira(discountedPrice)}
+          </span>
         )}
       </div>
 
-      {/* Discount text */}
       {product.discount && (
-        <p style={{ fontSize: 14, color: "green", marginBottom: 12 }}>{product.discount}% discount applied</p>
+        <p style={{ fontSize: 14, color: "green", marginBottom: 12 }}>
+          {product.discount}% discount applied
+        </p>
       )}
 
-      {/* Description */}
       {product.description && (
-        <p style={{ fontSize: 14, color: "#555", lineHeight: 1.5, marginBottom: 16 }}>{product.description}</p>
+        <p style={{ fontSize: 14, color: "#555", lineHeight: 1.5, marginBottom: 16 }}>
+          {product.description}
+        </p>
       )}
 
-      {/* Add to Cart */}
       <button
         onClick={handleAddToCart}
         disabled={isInCart}

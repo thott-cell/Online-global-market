@@ -1,6 +1,5 @@
-// src/components/ProductCard.tsx
 import { useCart } from "../context/CartContext";
-import { useWishlist } from "../utils/wishlist"; // <- updated to use utils
+import { useWishlist } from "../utils/wishlist";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 
 interface ProductCardProps {
@@ -10,7 +9,7 @@ interface ProductCardProps {
   imageUrl?: string;
   description?: string;
   sellerId?: string;
-  discount?: number; // optional
+  discount?: number;
   category?: string;
 }
 
@@ -24,17 +23,17 @@ const ProductCard = ({
   discount,
 }: ProductCardProps) => {
   const { addToCart } = useCart();
-  const { wishlist, addToWishlist, removeFromWishlist } = useWishlist(); // <- updated here
+  const { wishlist, addToWishlist, removeFromWishlist } = useWishlist();
 
-  const isWishlisted = wishlist.some((item: { id: string; }) => item.id === id);
+  const isWishlisted = wishlist.some((item: { id: string }) => item.id === id);
 
   // Calculate final price only if discount exists
-  const finalPrice =
+  const discountedPrice =
     discount && discount > 0 ? Math.round(price - (price * discount) / 100) : price;
 
   const handleWishlist = () => {
     if (isWishlisted) removeFromWishlist(id);
-    else addToWishlist({ id, title, price, imageUrl, description, sellerId, discount });
+    else addToWishlist({ id, title, price, imageUrl, description, sellerId, discount, discountedPrice });
   };
 
   const formatNaira = (amount: number) =>
@@ -43,21 +42,17 @@ const ProductCard = ({
   return (
     <div className="product-card">
       <div style={{ position: "relative" }}>
-        {/* Show discount badge only if discount exists */}
         {discount && discount > 0 && (
           <span className="discount-badge">-{discount}%</span>
         )}
-
-        {/* Product Image */}
         {imageUrl && <img src={imageUrl} alt={title} />}
       </div>
 
       <h4>{title}</h4>
-
       {description && <p>{description}</p>}
 
       <div className="price-container">
-        <span className="discounted-price">{formatNaira(finalPrice)}</span>
+        <span className="discounted-price">{formatNaira(discountedPrice)}</span>
         {discount && discount > 0 && (
           <span className="original-price">{formatNaira(price)}</span>
         )}
@@ -69,14 +64,15 @@ const ProductCard = ({
             addToCart({
               id,
               title,
-              price: finalPrice,
+              price,
+              discountedPrice,
               quantity: 1,
               sellerId: sellerId || "",
               description: description || "",
               discount: discount || 0,
               imageUrl: imageUrl || "",
             })
-            }
+          }
           style={{ flex: 1 }}
         >
           Add to Cart
