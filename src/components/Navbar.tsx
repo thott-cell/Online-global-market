@@ -22,14 +22,17 @@ const Navbar = ({ cartCount, onChangePage, currentPage }: NavbarProps) => {
     gap: 6,
   });
 
+  const showMobileNavPages = ["home", "categories", "favorite", "profile"];
+  const showMobileNav = showMobileNavPages.includes(currentPage);
+
   return (
     <>
       {/* ================= Desktop Navbar ================= */}
       <nav className="navbar desktop-nav">
-        
-
         <div className="logo">
-          {currentPage === "home" && <img src={logo} alt="Campus Marketplace Logo" />}
+          {currentPage === "home" && (
+            <img src={logo} alt="Campus Marketplace Logo" />
+          )}
         </div>
 
         <div className="nav-links">
@@ -37,15 +40,24 @@ const Navbar = ({ cartCount, onChangePage, currentPage }: NavbarProps) => {
             <i className="fa-solid fa-house"></i> Home
           </button>
 
-          <button style={getButtonStyle("categories")} onClick={() => onChangePage("categories")}>
+          <button
+            style={getButtonStyle("categories")}
+            onClick={() => onChangePage("categories")}
+          >
             <i className="fa-solid fa-layer-group"></i> Categories
           </button>
 
-          <button style={getButtonStyle("favorite")} onClick={() => onChangePage("favorite")}>
+          <button
+            style={getButtonStyle("favorite")}
+            onClick={() => onChangePage("favorite")}
+          >
             <i className="fa-solid fa-heart"></i> Favorite
           </button>
 
-          <button style={getButtonStyle("profile")} onClick={() => onChangePage("profile")}>
+          <button
+            style={getButtonStyle("profile")}
+            onClick={() => onChangePage("profile")}
+          >
             <i className="fa-solid fa-user"></i> Profile
           </button>
         </div>
@@ -67,10 +79,10 @@ const Navbar = ({ cartCount, onChangePage, currentPage }: NavbarProps) => {
 
       {/* ================= Mobile Header ================= */}
       <div className="nav-action">
-        
-
         <div className="logo">
-          {currentPage === "home" && <img src={logo} alt="Campus Marketplace Logo" />}
+          {currentPage === "home" && (
+            <img src={logo} alt="Campus Marketplace Logo" />
+          )}
         </div>
 
         <input
@@ -87,27 +99,38 @@ const Navbar = ({ cartCount, onChangePage, currentPage }: NavbarProps) => {
       </div>
 
       {/* ================= Mobile Bottom Nav ================= */}
-      <nav className="mobile-nav">
-        <button style={getButtonStyle("home")} onClick={() => onChangePage("home")}>
-          <i className="fa-solid fa-house"></i>
-          <span>Home</span>
-        </button>
+      {showMobileNav && (
+        <nav className="mobile-nav">
+          <button style={getButtonStyle("home")} onClick={() => onChangePage("home")}>
+            <i className="fa-solid fa-house"></i>
+            <span>Home</span>
+          </button>
 
-        <button style={getButtonStyle("categories")} onClick={() => onChangePage("categories")}>
-          <i className="fa-solid fa-layer-group"></i>
-          <span>Categories</span>
-        </button>
+          <button
+            style={getButtonStyle("categories")}
+            onClick={() => onChangePage("categories")}
+          >
+            <i className="fa-solid fa-layer-group"></i>
+            <span>Categories</span>
+          </button>
 
-        <button style={getButtonStyle("favorite")} onClick={() => onChangePage("favorite")}>
-          <i className="fa-solid fa-heart"></i>
-          <span>Favorite</span>
-        </button>
+          <button
+            style={getButtonStyle("favorite")}
+            onClick={() => onChangePage("favorite")}
+          >
+            <i className="fa-solid fa-heart"></i>
+            <span>Favorite</span>
+          </button>
 
-        <button style={getButtonStyle("profile")} onClick={() => onChangePage("profile")}>
-          <i className="fa-solid fa-user"></i>
-          <span>Profile</span>
-        </button>
-      </nav>
+          <button
+            style={getButtonStyle("profile")}
+            onClick={() => onChangePage("profile")}
+          >
+            <i className="fa-solid fa-user"></i>
+            <span>Profile</span>
+          </button>
+        </nav>
+      )}
     </>
   );
 };

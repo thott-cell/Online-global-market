@@ -35,6 +35,8 @@ import { CartProvider, useCart } from "./context/CartContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { WishlistProvider } from "./context/WishlistContext";
 
+import SplashScreen from "./components/SplashScreen"; // Import splash
+
 type Page =
   | "home"
   | "menu"
@@ -87,12 +89,22 @@ const pageNames: Record<Page, string> = {
 };
 
 export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
+  // Show splash only once on first load
+  useEffect(() => {
+    const timer = setTimeout(() => setShowSplash(false), 2500); // 2.5s splash
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <SearchProvider>
       <AuthProvider>
         <CartProvider>
           <WishlistProvider>
-            <AppContent />
+            {showSplash ? <SplashScreen onFinish={function (): void {
+              throw new Error("Function not implemented.");
+            } } /> : <AppContent />}
           </WishlistProvider>
         </CartProvider>
       </AuthProvider>

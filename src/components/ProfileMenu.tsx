@@ -2,7 +2,29 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { db } from "../firebase/config";
-import { collection, query, where, orderBy, onSnapshot, updateDoc, doc } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  onSnapshot,
+  updateDoc,
+  doc,
+} from "firebase/firestore";
+
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faBell,
+  faReceipt,
+  faHome,
+  faCreditCard,
+  faCog,
+  faStore,
+  faPlus,
+  faTools,
+  faQuestionCircle,
+  faSignOutAlt,
+} from "@fortawesome/free-solid-svg-icons";
 
 interface Notification {
   id: string;
@@ -23,26 +45,25 @@ const ProfileMenu = ({ onNavigate, role }: ProfileMenuProps) => {
   const [approvedProductsCount, setApprovedProductsCount] = useState(0);
   const [ordersCount, setOrdersCount] = useState(0);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
-  // Seller stats
   useEffect(() => {
     if (!user || role !== "seller") return;
 
     const productsRef = collection(db, "products");
     const qProducts = query(productsRef, where("sellerId", "==", user.uid));
 
-    const unsubProducts = onSnapshot(qProducts, snap => {
-      const docs = snap.docs.map(d => d.data());
+    const unsubProducts = onSnapshot(qProducts, (snap) => {
+      const docs = snap.docs.map((d) => d.data());
       setPendingProductsCount(docs.filter((p: any) => p.status === "pending").length);
       setApprovedProductsCount(docs.filter((p: any) => p.status === "approved").length);
     });
 
     const ordersRef = collection(db, "orders");
 
-    const unsubOrders = onSnapshot(ordersRef, snap => {
+    const unsubOrders = onSnapshot(ordersRef, (snap) => {
       const c = snap.docs
-        .map(d => d.data())
+        .map((d) => d.data())
         .filter((order: any) =>
           order.products?.some((p: any) => p.sellerId === user.uid)
         ).length;
@@ -56,7 +77,6 @@ const ProfileMenu = ({ onNavigate, role }: ProfileMenuProps) => {
     };
   }, [user, role]);
 
-  // Notifications
   useEffect(() => {
     if (!user) return;
 
@@ -67,11 +87,11 @@ const ProfileMenu = ({ onNavigate, role }: ProfileMenuProps) => {
       orderBy("createdAt", "desc")
     );
 
-    const unsub = onSnapshot(q, snap => {
+    const unsub = onSnapshot(q, (snap) => {
       setNotifications(
-        snap.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
+        snap.docs.map((docItem) => ({
+          id: docItem.id,
+          ...docItem.data(),
         })) as Notification[]
       );
     });
@@ -80,10 +100,10 @@ const ProfileMenu = ({ onNavigate, role }: ProfileMenuProps) => {
   }, [user]);
 
   const markAllAsRead = async () => {
-    const unread = notifications.filter(n => !n.read);
+    const unread = notifications.filter((n) => !n.read);
 
     await Promise.all(
-      unread.map(n =>
+      unread.map((n) =>
         updateDoc(doc(db, "notifications", n.id), { read: true })
       )
     );
@@ -103,28 +123,28 @@ const ProfileMenu = ({ onNavigate, role }: ProfileMenuProps) => {
             setTimeout(markAllAsRead, 100);
           }}
         >
-          🔔 Notifications {unreadCount > 0 && <span style={styles.badge}>{unreadCount}</span>}
+          <FontAwesomeIcon icon={faBell} /> Notifications
+          {unreadCount > 0 && <span style={styles.badge}>{unreadCount}</span>}
         </button>
       )}
 
-      {/* Standard menu */}
       <button style={styles.item} onClick={() => onNavigate("orders")}>
-        🧾 Orders
+        <FontAwesomeIcon icon={faReceipt} /> Orders
       </button>
 
       <button style={styles.item} onClick={() => onNavigate("addresses")}>
-        🏠 Saved Addresses
+        <FontAwesomeIcon icon={faHome} /> Saved Addresses
       </button>
 
       <button style={styles.item} onClick={() => onNavigate("payments")}>
-        💳 Payment Methods
+        <FontAwesomeIcon icon={faCreditCard} /> Payment Methods
       </button>
 
       <button style={styles.item} onClick={() => onNavigate("accountSettings")}>
-        ⚙️ Account Settings
+        <FontAwesomeIcon icon={faCog} /> Account Settings
       </button>
 
-      {/* SELLER BLOCK */}
+      {/* SELLER */}
       {showSellerBlock && (
         <>
           <hr style={styles.sep} />
@@ -133,7 +153,7 @@ const ProfileMenu = ({ onNavigate, role }: ProfileMenuProps) => {
             style={styles.item}
             onClick={() => onNavigate("sellerDashboard")}
           >
-            🏪 Seller Dashboard
+            <FontAwesomeIcon icon={faStore} /> Seller Dashboard
           </button>
 
           <div style={styles.sellerStats}>
@@ -146,12 +166,12 @@ const ProfileMenu = ({ onNavigate, role }: ProfileMenuProps) => {
             style={styles.item}
             onClick={() => onNavigate("sellerAddProduct")}
           >
-            ➕ Upload Product
+            <FontAwesomeIcon icon={faPlus} /> Upload Product
           </button>
         </>
       )}
 
-      {/* ADMIN BLOCK */}
+      {/* ADMIN */}
       {showAdminBlock && (
         <>
           <hr style={styles.sep} />
@@ -160,7 +180,7 @@ const ProfileMenu = ({ onNavigate, role }: ProfileMenuProps) => {
             style={styles.item}
             onClick={() => onNavigate("adminDashboard")}
           >
-            🛠 Admin Dashboard
+            <FontAwesomeIcon icon={faTools} /> Admin Dashboard
           </button>
         </>
       )}
@@ -168,14 +188,14 @@ const ProfileMenu = ({ onNavigate, role }: ProfileMenuProps) => {
       <hr style={styles.sep} />
 
       <button style={styles.item} onClick={() => onNavigate("help")}>
-        ❓ Help & Support
+        <FontAwesomeIcon icon={faQuestionCircle} /> Help & Support
       </button>
 
       <button
         style={{ ...styles.item, color: "red" }}
         onClick={() => onNavigate("signout")}
       >
-        🔓 Sign Out
+        <FontAwesomeIcon icon={faSignOutAlt} /> Sign Out
       </button>
     </div>
   );
@@ -183,15 +203,22 @@ const ProfileMenu = ({ onNavigate, role }: ProfileMenuProps) => {
 
 const styles: Record<string, React.CSSProperties> = {
   menu: { display: "flex", flexDirection: "column", gap: 8 },
+
   item: {
     padding: "12px",
     borderRadius: 8,
     border: "1px solid #eee",
     background: "#fff",
     cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
   },
+
   sep: { border: "none", borderTop: "1px solid #eee" },
+
   sellerStats: { display: "flex", gap: 10 },
+
   badge: {
     background: "#007bff",
     color: "#fff",

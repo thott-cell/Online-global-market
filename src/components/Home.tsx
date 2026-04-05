@@ -1,12 +1,18 @@
-import { useEffect, useState } from "react";
+// src/components/Home.tsx
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { db } from "../firebase/config";
 import { collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
 import { useAuth } from "../context/AuthContext";
-import { useSearch } from "../context/SearchContext"; // ✅ Import search context
+import { useSearch } from "../context/SearchContext";
 import ProductCard from "./ProductCard";
 import ProductSkeleton from "./ProductSkeleton";
 import { toast } from "react-hot-toast";
+
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/pagination";
 
 interface Product {
   id: string;
@@ -25,7 +31,7 @@ type HomeProps = {
 
 const Home = ({ onSelectProduct, onChangePage }: HomeProps) => {
   const { user, loading: authLoading } = useAuth();
-  const { searchTerm } = useSearch(); // ✅ Get searchTerm from context
+  const { searchTerm } = useSearch();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
@@ -47,7 +53,7 @@ const Home = ({ onSelectProduct, onChangePage }: HomeProps) => {
         ...doc.data(),
       })) as Product[];
 
-      setProducts(items.slice(0, 8));
+      setProducts(items);
       setLoadingProducts(false);
     });
 
@@ -67,48 +73,77 @@ const Home = ({ onSelectProduct, onChangePage }: HomeProps) => {
     }
   };
 
-  // ✅ Filter products based on search term
-  const filteredProducts = products.filter((product) =>
-    product.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProducts = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return products;
+    return products.filter((product) =>
+      product.title.toLowerCase().includes(term)
+    );
+  }, [products, searchTerm]);
+
+  const featuredProducts = products.slice(0, 4);
 
   return (
     <div className="page">
-      {/* HERO */}
-      <section className="hero">
-        <div className="hero-content">
-          <h1>Buy & Sell Worldwide</h1>
-          <p>
-            Connect with buyers and sellers across campus.
-            Discover, buy and sell products easily in your marketplace.
-          </p>
-
-          <div className="hero-search">
-            <input
-              type="text"
-              placeholder="Search for products..."
-              value={searchTerm} // ✅ Bind input to searchTerm for live updates
-              onChange={(_e) => {}}
-            />
-            <button>
-              <i className="fa-solid fa-magnifying-glass"></i>
-            </button>
-          </div>
-
-          {!authLoading && !user && (
-            <div className="hero-buttons">
-              <button onClick={() => onChangePage("signup")}>
-                Sign Up
-              </button>
-              <button onClick={() => onChangePage("login")}>
-                Sign In
-              </button>
-            </div>
-          )}
-        </div>
+      {/* HERO CAROUSEL */}
+      <section className="hero-carousel">
+        {loadingProducts ? (
+          <Swiper
+            modules={[Autoplay, Pagination]}
+            slidesPerView={1}
+            spaceBetween={0}
+            loop={true}
+            speed={800}
+            autoplay={{ delay: 3500, disableOnInteraction: false }}
+            pagination={{ clickable: true }}
+            className="hero-swiper"
+          >
+            {[...Array(4)].map((_, i) => (
+              <SwiperSlide key={i}>
+                <ProductSkeleton isCarousel />
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        ) : featuredProducts.length > 0 ? (
+          <Swiper
+            modules={[Autoplay, Pagination]}
+            slidesPerView={1}
+            spaceBetween={0}
+            loop={true}
+            speed={800}
+            autoplay={{ delay: 3500, disableOnInteraction: false }}
+            pagination={{ clickable: true }}
+            className="hero-swiper"
+          >
+            {featuredProducts.map((product) => (
+              <SwiperSlide key={product.id}>
+                <div
+                  className="hero-slide"
+                  onClick={() => handleProductClick(product.id)}
+                >
+                  <img
+                    src={product.imageUrl}
+                    alt={product.title}
+                    className="hero-image"
+                  />
+                </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        ) : (
+          <div className="carousel-loading">No featured products yet.</div>
+        )}
       </section>
 
-      {/* FEATURED PRODUCTS */}
+      {/* AUTH BUTTONS */}
+      {!authLoading && !user && (
+        <section className="auth-strip">
+          <button onClick={() => onChangePage("signup")}>Sign Up</button>
+          <button onClick={() => onChangePage("login")}>Sign In</button>
+        </section>
+      )}
+
+      {/* PRODUCTS */}
       <h2 className="section-title">Featured Products</h2>
 
       {loadingProducts && (
@@ -120,9 +155,7 @@ const Home = ({ onSelectProduct, onChangePage }: HomeProps) => {
       )}
 
       {!loadingProducts && filteredProducts.length === 0 && (
-        <p className="no-products">
-          No products match your search.
-        </p>
+        <p className="no-products">No products match your search.</p>
       )}
 
       {!loadingProducts && filteredProducts.length > 0 && (
@@ -146,6 +179,89 @@ const Home = ({ onSelectProduct, onChangePage }: HomeProps) => {
           ))}
         </div>
       )}
+
+      <style>{`
+        .hero-carousel {
+          width: 100%;
+          margin: 12px 0 14px;
+        }
+
+        .hero-swiper {
+          width: 100%;
+        }
+
+        .hero-slide {
+          width: 100%;
+          height: 210px;
+          overflow: hidden;
+          border-radius: 14px;
+          cursor: pointer;
+          background: #f5f5f5;
+        }
+
+        .hero-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
+        .carousel-loading {
+          height: 210px;
+          border-radius: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #f2f2f2;
+          color: #666;
+          font-weight: 600;
+        }
+
+        .auth-strip {
+          display: flex;
+          gap: 10px;
+          margin: 10px 0 18px;
+        }
+
+        .auth-strip button {
+          flex: 1;
+          padding: 8px 14px;
+          border: none;
+          border-radius: 10px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+
+        .auth-strip button:first-child {
+          background: #28a745;
+          color: #fff;
+        }
+
+        .auth-strip button:last-child {
+          background: #f2f2f2;
+          color: #111;
+        }
+
+        .swiper-pagination-bullet {
+          background: #d0d0d0;
+          opacity: 1;
+        }
+
+        .swiper-pagination-bullet-active {
+          background: #28a745;
+        }
+
+        @media (max-width: 768px) {
+          .hero-slide,
+          .carousel-loading {
+            height: 180px;
+          }
+
+          .auth-strip button {
+            padding: 6px 12px;
+          }
+        }
+      `}</style>
     </div>
   );
 };

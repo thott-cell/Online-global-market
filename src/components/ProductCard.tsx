@@ -27,24 +27,53 @@ const ProductCard = ({
 
   const isWishlisted = wishlist.some((item: { id: string }) => item.id === id);
 
-  // Calculate final price only if discount exists
-  const discountedPrice =
-    discount && discount > 0 ? Math.round(price - (price * discount) / 100) : price;
+  const safePrice = Number.isFinite(Number(price)) ? Number(price) : 0;
+  const safeDiscount = Number.isFinite(Number(discount)) ? Number(discount) : 0;
+  const hasDiscount = safeDiscount > 0;
 
-  const handleWishlist = () => {
-    if (isWishlisted) removeFromWishlist(id);
-    else addToWishlist({ id, title, price, imageUrl, description, sellerId, discount, discountedPrice });
-  };
+  const discountedPrice = hasDiscount
+    ? Math.round(safePrice - (safePrice * safeDiscount) / 100)
+    : safePrice;
 
   const formatNaira = (amount: number) =>
     `₦${amount.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`;
 
+  const handleWishlist = () => {
+    if (isWishlisted) {
+      removeFromWishlist(id);
+      return;
+    }
+
+    addToWishlist({
+      id,
+      title,
+      price: safePrice,
+      imageUrl,
+      description,
+      sellerId,
+      discount: safeDiscount,
+      discountedPrice,
+    });
+  };
+
+  const handleAddToCart = () => {
+    addToCart({
+      id,
+      title,
+      price: safePrice,
+      discountedPrice,
+      quantity: 1,
+      sellerId: sellerId || "",
+      description: description || "",
+      discount: safeDiscount,
+      imageUrl: imageUrl || "",
+    });
+  };
+
   return (
     <div className="product-card">
       <div style={{ position: "relative" }}>
-        {discount && discount > 0 && (
-          <span className="discount-badge">-{discount}%</span>
-        )}
+        {hasDiscount && <span className="discount-badge">-{safeDiscount}%</span>}
         {imageUrl && <img src={imageUrl} alt={title} />}
       </div>
 
@@ -53,28 +82,13 @@ const ProductCard = ({
 
       <div className="price-container">
         <span className="discounted-price">{formatNaira(discountedPrice)}</span>
-        {discount && discount > 0 && (
-          <span className="original-price">{formatNaira(price)}</span>
+        {hasDiscount && (
+          <span className="original-price">{formatNaira(safePrice)}</span>
         )}
       </div>
 
       <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
-        <button
-          onClick={() =>
-            addToCart({
-              id,
-              title,
-              price,
-              discountedPrice,
-              quantity: 1,
-              sellerId: sellerId || "",
-              description: description || "",
-              discount: discount || 0,
-              imageUrl: imageUrl || "",
-            })
-          }
-          style={{ flex: 1 }}
-        >
+        <button onClick={handleAddToCart} style={{ flex: 1 }}>
           Add to Cart
         </button>
 
