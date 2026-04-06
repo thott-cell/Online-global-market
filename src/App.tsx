@@ -607,13 +607,22 @@ function AppContent() {
 }
 
 export default function App() {
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowSplash(false), 2500);
-    return () => clearTimeout(timer);
-  }, []);
+    const hasSeenSplash = sessionStorage.getItem("seenSplash");
 
+    if (!hasSeenSplash) {
+      setShowSplash(true);
+
+      const timer = setTimeout(() => {
+        setShowSplash(false);
+        sessionStorage.setItem("seenSplash", "true");
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, []);
   return (
     <SearchProvider>
       <AuthProvider>

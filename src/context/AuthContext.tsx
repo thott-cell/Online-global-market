@@ -1,5 +1,3 @@
-// src/context/AuthContext.tsx
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { auth, db } from "../firebase/config";
 import {
@@ -33,26 +31,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [role, setRole] = useState<Role>(null);
   const [loading, setLoading] = useState(true);
 
-  // 🔥 Listen for auth changes
+  // Persist auth state across reloads
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (u) => {
-      setUser(u);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
 
-      if (u) {
-        const docRef = doc(db, "users", u.uid);
+      if (currentUser) {
+        const docRef = doc(db, "users", currentUser.uid);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
           const fetchedRole = docSnap.data().role as Role;
           setRole(fetchedRole || "buyer");
         } else {
-          // 🔥 If no document exists, create one automatically
+          // Automatically create a buyer record if missing
           await setDoc(docRef, {
             role: "buyer",
-            email: u.email,
+            email: currentUser.email,
             createdAt: new Date(),
           });
-
           setRole("buyer");
         }
       } else {
@@ -68,6 +65,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = async (email: string, password: string) => {
     setLoading(true);
     await signInWithEmailAndPassword(auth, email, password);
+    // don't set role/user manually; onAuthStateChanged will handle it
     setLoading(false);
   };
 
