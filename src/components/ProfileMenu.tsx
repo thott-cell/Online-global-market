@@ -17,7 +17,6 @@ import {
   faBell,
   faReceipt,
   faHome,
-  faCreditCard,
   faCog,
   faStore,
   faPlus,
@@ -136,9 +135,7 @@ const ProfileMenu = ({ onNavigate, role }: ProfileMenuProps) => {
         <FontAwesomeIcon icon={faHome} /> Saved Addresses
       </button>
 
-      <button style={styles.item} onClick={() => onNavigate("payments")}>
-        <FontAwesomeIcon icon={faCreditCard} /> Payment Methods
-      </button>
+     
 
       <button style={styles.item} onClick={() => onNavigate("accountSettings")}>
         <FontAwesomeIcon icon={faCog} /> Account Settings
