@@ -1,16 +1,23 @@
 // src/App.tsx
-import { SearchProvider } from "./context/SearchContext";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Routes, Route, useLocation, useNavigate, useParams } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+
+import { SearchProvider } from "./context/SearchContext";
+import { CartProvider, useCart } from "./context/CartContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { WishlistProvider } from "./context/WishlistContext";
 
 import Navbar from "./components/Navbar";
 import BackButton from "./components/BackButton";
+import SplashScreen from "./components/SplashScreen";
 
 import Home from "./components/Home";
-import OrderSuccess from "./pages/OrderSuccess";
-import OrderDetail from "./pages/OrderDetail";
 import Favorite from "./components/Favorite";
 import Profile from "./components/Profile";
+
+import OrderSuccess from "./pages/OrderSuccess";
+import OrderDetail from "./pages/OrderDetail";
 import ProductDetail from "./pages/ProductDetail";
 import Notifications from "./pages/Notifications";
 import NotificationDetail from "./pages/NotificationDetail";
@@ -27,15 +34,8 @@ import Marketplace from "./pages/Marketplace";
 import HelpSupport from "./pages/HelpSupport";
 import Checkout from "./pages/Checkout";
 import Cart from "./pages/Cart";
-
 import Categories from "./pages/Categories";
 import CategoryProducts from "./pages/CategoryProducts";
-
-import { CartProvider, useCart } from "./context/CartContext";
-import { AuthProvider, useAuth } from "./context/AuthContext";
-import { WishlistProvider } from "./context/WishlistContext";
-
-import SplashScreen from "./components/SplashScreen"; // Import splash
 
 type Page =
   | "home"
@@ -61,6 +61,12 @@ type Page =
   | "productDetail"
   | "orderSuccess"
   | "orderDetail";
+
+type NavExtra = {
+  productId?: string;
+  notificationId?: string;
+  orderId?: string;
+};
 
 const pageNames: Record<Page, string> = {
   home: "Home",
@@ -88,27 +94,122 @@ const pageNames: Record<Page, string> = {
   orderDetail: "Order Detail",
 };
 
-export default function App() {
-  const [showSplash, setShowSplash] = useState(true);
+function getCurrentPageKey(pathname: string): string {
+  if (pathname === "/" || pathname === "") return "home";
+  if (pathname === "/categories") return "categories";
+  if (pathname === "/favorite") return "favorite";
+  if (pathname === "/profile") return "profile";
+  if (pathname === "/signup") return "signup";
+  if (pathname === "/login") return "login";
+  if (pathname === "/cart") return "cart";
+  if (pathname === "/checkout") return "checkout";
+  if (pathname === "/seller-add-product") return "sellerAddProduct";
+  if (pathname === "/admin-dashboard") return "adminDashboard";
+  if (pathname === "/marketplace") return "marketplace";
+  if (pathname === "/orders") return "orders";
+  if (pathname === "/addresses") return "addresses";
+  if (pathname === "/payments") return "payments";
+  if (pathname === "/account-settings") return "accountSettings";
+  if (pathname === "/seller-dashboard") return "sellerDashboard";
+  if (pathname === "/help") return "help";
+  if (pathname === "/notifications") return "notifications";
+  if (pathname === "/order-success") return "orderSuccess";
+  if (pathname.startsWith("/product/")) return "productDetail";
+  if (pathname.startsWith("/notification/")) return "notificationDetail";
+  if (pathname.startsWith("/order/")) return "orderDetail";
+  if (pathname.startsWith("/category/")) return "categories";
+  return "home";
+}
 
-  // Show splash only once on first load
-  useEffect(() => {
-    const timer = setTimeout(() => setShowSplash(false), 2500); // 2.5s splash
-    return () => clearTimeout(timer);
-  }, []);
+function PageShell({
+  title,
+  onBack,
+  children,
+}: {
+  title: string;
+  onBack: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <BackButton onBack={onBack} />
+        <span style={{ fontWeight: 600 }}>{title}</span>
+      </div>
+      {children}
+    </>
+  );
+}
+
+function CategoryProductsRoute({ onBack }: { onBack: () => void }) {
+  const { categoryId } = useParams<{ categoryId: string }>();
+
+  if (!categoryId) {
+    return (
+      <PageShell title="Categories" onBack={onBack}>
+        <p>Category not found.</p>
+      </PageShell>
+    );
+  }
 
   return (
-    <SearchProvider>
-      <AuthProvider>
-        <CartProvider>
-          <WishlistProvider>
-            {showSplash ? <SplashScreen onFinish={function (): void {
-              throw new Error("Function not implemented.");
-            } } /> : <AppContent />}
-          </WishlistProvider>
-        </CartProvider>
-      </AuthProvider>
-    </SearchProvider>
+    <PageShell title="Categories" onBack={onBack}>
+      <CategoryProducts category={categoryId} />
+    </PageShell>
+  );
+}
+
+function ProductDetailRoute({ onBack }: { onBack: () => void }) {
+  const { productId } = useParams<{ productId: string }>();
+
+  if (!productId) {
+    return (
+      <PageShell title={pageNames.productDetail} onBack={onBack}>
+        <p>Product not found.</p>
+      </PageShell>
+    );
+  }
+
+  return (
+    <PageShell title={pageNames.productDetail} onBack={onBack}>
+      <ProductDetail productId={productId} onBack={onBack} />
+    </PageShell>
+  );
+}
+
+function NotificationDetailRoute({ onBack }: { onBack: () => void }) {
+  const { notificationId } = useParams<{ notificationId: string }>();
+
+  if (!notificationId) {
+    return (
+      <PageShell title={pageNames.notificationDetail} onBack={onBack}>
+        <p>Notification not found.</p>
+      </PageShell>
+    );
+  }
+
+  return (
+    <PageShell title={pageNames.notificationDetail} onBack={onBack}>
+      <NotificationDetail notificationId={notificationId} onBack={onBack} />
+    </PageShell>
+  );
+}
+
+function OrderDetailRoute({ onBack }: { onBack: () => void }) {
+  const { orderId } = useParams<{ orderId: string }>();
+
+  if (!orderId) {
+    return (
+      <PageShell title={pageNames.orderDetail} onBack={onBack}>
+        <p>Order not found.</p>
+      </PageShell>
+    );
+  }
+
+  return (
+    <PageShell title={pageNames.orderDetail} onBack={onBack}>
+      <OrderDetail orderId={orderId} onBack={onBack} />
+    </PageShell>
   );
 }
 
@@ -116,14 +217,13 @@ function AppContent() {
   const { cartItems } = useCart();
   const { role, logout } = useAuth();
 
-  const [currentPage, setCurrentPage] = useState<Page>("home");
-  const [prevPage, setPrevPage] = useState<Page | null>(null);
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
-  const [selectedNotificationId, setSelectedNotificationId] = useState<string | null>(null);
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [isOffline, setIsOffline] = useState<boolean>(!navigator.onLine);
 
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const currentPage = getCurrentPageKey(location.pathname);
 
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);
@@ -138,269 +238,132 @@ function AppContent() {
     };
   }, []);
 
+  useEffect(() => {
+    if (role === "admin") {
+      navigate("/admin-dashboard", { replace: true });
+    } else if (role === "seller") {
+      navigate("/seller-dashboard", { replace: true });
+    } else if (role === "buyer") {
+      navigate("/profile", { replace: true });
+    }
+  }, [role, navigate]);
+
+  const handleBack = (): void => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate("/", { replace: true });
+    }
+  };
+
   const handlePageChange = (
     page: Page | string,
-    extra?: { productId?: string; notificationId?: string; orderId?: string } | string
+    extra?: NavExtra | string
   ) => {
     const pageStr = page as string;
 
     if (pageStr === "signout") {
       void logout?.();
-      setPrevPage(null);
-      setCurrentPage("home");
+      navigate("/", { replace: true });
       return;
     }
 
-    setPrevPage(currentPage);
-
-    if (extra && typeof extra === "object") {
-      if ("productId" in extra) {
-        setSelectedProductId(extra.productId || null);
-      }
-
-      if ("notificationId" in extra) {
-        setSelectedNotificationId(extra.notificationId || null);
-      }
-
-      if ("orderId" in extra) {
-        setSelectedOrderId(extra.orderId || null);
-      }
+    if (pageStr.startsWith("category-")) {
+      const category = pageStr.replace("category-", "");
+      navigate(`/category/${category}`);
+      return;
     }
 
-    setCurrentPage(pageStr as Page);
+    switch (pageStr) {
+      case "home":
+      case "menu":
+        navigate("/");
+        return;
+      case "categories":
+        navigate("/categories");
+        return;
+      case "favorite":
+        navigate("/favorite");
+        return;
+      case "profile":
+        navigate("/profile");
+        return;
+      case "signup":
+        navigate("/signup");
+        return;
+      case "login":
+        navigate("/login");
+        return;
+      case "cart":
+        navigate("/cart");
+        return;
+      case "checkout":
+        navigate("/checkout");
+        return;
+      case "sellerAddProduct":
+        navigate("/seller-add-product");
+        return;
+      case "adminDashboard":
+        navigate("/admin-dashboard");
+        return;
+      case "marketplace":
+        navigate("/marketplace");
+        return;
+      case "orders":
+        navigate("/orders");
+        return;
+      case "addresses":
+        navigate("/addresses");
+        return;
+      case "payments":
+        navigate("/payments");
+        return;
+      case "accountSettings":
+        navigate("/account-settings");
+        return;
+      case "sellerDashboard":
+        navigate("/seller-dashboard");
+        return;
+      case "help":
+        navigate("/help");
+        return;
+      case "notifications":
+        navigate("/notifications");
+        return;
+      case "notificationDetail":
+        if (typeof extra === "object" && extra?.notificationId) {
+          navigate(`/notification/${extra.notificationId}`);
+        } else {
+          navigate("/notifications");
+        }
+        return;
+      case "productDetail":
+        if (typeof extra === "object" && extra?.productId) {
+          navigate(`/product/${extra.productId}`);
+        } else {
+          navigate("/");
+        }
+        return;
+      case "orderSuccess":
+        navigate("/order-success");
+        return;
+      case "orderDetail":
+        if (typeof extra === "object" && extra?.orderId) {
+          navigate(`/order/${extra.orderId}`);
+        } else {
+          navigate("/orders");
+        }
+        return;
+      default:
+        navigate("/");
+    }
   };
 
   const navHandler = (
     page: string,
-    extra?: { productId?: string; notificationId?: string; orderId?: string } | string
+    extra?: NavExtra | string
   ) => {
     handlePageChange(page, extra);
-  };
-
-  const handleBack = (): void => {
-    if (prevPage) {
-      setCurrentPage(prevPage);
-      setPrevPage(null);
-    } else {
-      setCurrentPage("home");
-    }
-  };
-
-  const showBackButton = currentPage !== "home";
-
-  useEffect(() => {
-    if (role === "admin") setCurrentPage("adminDashboard");
-    else if (role === "seller") setCurrentPage("sellerDashboard");
-    else if (role === "buyer") setCurrentPage("profile");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [role]);
-
-  const renderPage = () => {
-    const backBtnElement = showBackButton ? (
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <BackButton onBack={handleBack} />
-        <span style={{ fontWeight: 600 }}>{pageNames[(currentPage as Page) ?? "home"]}</span>
-      </div>
-    ) : null;
-
-    if (typeof currentPage === "string" && currentPage.startsWith("category-")) {
-      const category = currentPage.replace("category-", "");
-      return (
-        <>
-          {backBtnElement}
-          <CategoryProducts category={category} />
-        </>
-      );
-    }
-
-    switch (currentPage) {
-      case "home":
-        return (
-          <Home
-            onChangePage={navHandler}
-            onSelectProduct={(id) => handlePageChange("productDetail", { productId: id })}
-          />
-        );
-
-      case "menu":
-        return <>{backBtnElement}</>;
-
-      case "cart":
-        return (
-          <>
-            {backBtnElement}
-            <Cart setCurrentPage={navHandler} />
-          </>
-        );
-
-      case "productDetail":
-        if (!selectedProductId) return <p>Product not found.</p>;
-        return (
-          <>
-            {backBtnElement}
-            <ProductDetail productId={selectedProductId} onBack={handleBack} />
-          </>
-        );
-
-      case "favorite":
-        return (
-          <>
-            {backBtnElement}
-            <Favorite />
-          </>
-        );
-
-      case "profile":
-        return (
-          <>
-            {backBtnElement}
-            <Profile onChangePage={(p) => handlePageChange(p as Page)} />
-          </>
-        );
-
-      case "orders":
-        return (
-          <>
-            {backBtnElement}
-            <Orders setCurrentPage={navHandler} />
-          </>
-        );
-
-      case "addresses":
-        return (
-          <>
-            {backBtnElement}
-            <SavedAddresses onSaved={() => handlePageChange("addresses")} />
-          </>
-        );
-
-      case "payments":
-        return (
-          <>
-            {backBtnElement}
-            <PaymentMethods />
-          </>
-        );
-
-      case "accountSettings":
-        return (
-          <>
-            {backBtnElement}
-            <AccountSettings />
-          </>
-        );
-
-      case "sellerDashboard":
-        return (
-          <>
-            {backBtnElement}
-            {role === "seller" ? <SellerDashboard /> : <p>Access denied</p>}
-          </>
-        );
-
-      case "sellerAddProduct":
-        return (
-          <>
-            {backBtnElement}
-            {role === "seller" ? <SellerAddProduct /> : <p>Access denied</p>}
-          </>
-        );
-
-      case "adminDashboard":
-        return (
-          <>
-            {backBtnElement}
-            {role === "admin" ? <AdminDashboard /> : <p>Access denied</p>}
-          </>
-        );
-
-      case "marketplace":
-        return (
-          <>
-            {backBtnElement}
-            <Marketplace />
-          </>
-        );
-
-      case "help":
-        return (
-          <>
-            {backBtnElement}
-            <HelpSupport />
-          </>
-        );
-
-      case "checkout":
-        return (
-          <>
-            {backBtnElement}
-            <Checkout setCurrentPage={navHandler} />
-          </>
-        );
-
-      case "orderSuccess":
-        return (
-          <>
-            {backBtnElement}
-            <OrderSuccess setCurrentPage={(p) => navHandler(p as string)} />
-          </>
-        );
-
-      case "signup":
-        return <Signup onSignedUp={() => handlePageChange("home")} />;
-
-      case "login":
-        return <Login setCurrentPage={navHandler} />;
-
-      case "notifications":
-        return (
-          <>
-            {backBtnElement}
-            <Notifications
-              onSelectNotification={(id) =>
-                handlePageChange("notificationDetail", { notificationId: id })
-              }
-            />
-          </>
-        );
-
-      case "notificationDetail":
-        if (!selectedNotificationId) return <p>Notification not found.</p>;
-        return (
-          <>
-            {backBtnElement}
-            <NotificationDetail
-              notificationId={selectedNotificationId}
-              onBack={handleBack}
-            />
-          </>
-        );
-
-      case "categories":
-        return (
-          <>
-            {backBtnElement}
-            <Categories onChangePage={(p: string) => navHandler(p)} />
-          </>
-        );
-
-      case "orderDetail":
-        if (!selectedOrderId) return <p>Order not found.</p>;
-        return (
-          <>
-            {backBtnElement}
-            <OrderDetail orderId={selectedOrderId} onBack={handleBack} />
-          </>
-        );
-
-      default:
-        return (
-          <Home
-            onChangePage={navHandler}
-            onSelectProduct={(id) => handlePageChange("productDetail", { productId: id })}
-          />
-        );
-    }
   };
 
   return (
@@ -422,8 +385,255 @@ function AppContent() {
           You are offline
         </div>
       )}
-      <Navbar cartCount={cartCount} currentPage={currentPage as string} onChangePage={navHandler} />
-      <main>{renderPage()}</main>
+
+      <Navbar
+        cartCount={cartCount}
+        currentPage={currentPage}
+        onChangePage={navHandler}
+      />
+
+      <main>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <Home
+                onChangePage={navHandler}
+                onSelectProduct={(id) =>
+                  handlePageChange("productDetail", { productId: id })
+                }
+              />
+            }
+          />
+
+          <Route
+            path="/menu"
+            element={
+              <Home
+                onChangePage={navHandler}
+                onSelectProduct={(id) =>
+                  handlePageChange("productDetail", { productId: id })
+                }
+              />
+            }
+          />
+
+          <Route
+            path="/cart"
+            element={
+              <PageShell title={pageNames.cart} onBack={handleBack}>
+                <Cart setCurrentPage={navHandler} />
+              </PageShell>
+            }
+          />
+
+          <Route
+            path="/product/:productId"
+            element={<ProductDetailRoute onBack={handleBack} />}
+          />
+
+          <Route
+            path="/favorite"
+            element={
+              <PageShell title={pageNames.favorite} onBack={handleBack}>
+                <Favorite />
+              </PageShell>
+            }
+          />
+
+          <Route
+            path="/profile"
+            element={
+              <PageShell title={pageNames.profile} onBack={handleBack}>
+                <Profile onChangePage={(p) => handlePageChange(p as Page)} />
+              </PageShell>
+            }
+          />
+
+          <Route
+            path="/orders"
+            element={
+              <PageShell title={pageNames.orders} onBack={handleBack}>
+                <Orders setCurrentPage={navHandler} />
+              </PageShell>
+            }
+          />
+
+          <Route
+            path="/order/:orderId"
+            element={<OrderDetailRoute onBack={handleBack} />}
+          />
+
+          <Route
+            path="/addresses"
+            element={
+              <PageShell title={pageNames.addresses} onBack={handleBack}>
+                <SavedAddresses onSaved={() => handlePageChange("addresses")} />
+              </PageShell>
+            }
+          />
+
+          <Route
+            path="/payments"
+            element={
+              <PageShell title={pageNames.payments} onBack={handleBack}>
+                <PaymentMethods />
+              </PageShell>
+            }
+          />
+
+          <Route
+            path="/account-settings"
+            element={
+              <PageShell title={pageNames.accountSettings} onBack={handleBack}>
+                <AccountSettings />
+              </PageShell>
+            }
+          />
+
+          <Route
+            path="/seller-dashboard"
+            element={
+              <PageShell title={pageNames.sellerDashboard} onBack={handleBack}>
+                {role === "seller" ? <SellerDashboard /> : <p>Access denied</p>}
+              </PageShell>
+            }
+          />
+
+          <Route
+            path="/seller-add-product"
+            element={
+              <PageShell title={pageNames.sellerAddProduct} onBack={handleBack}>
+                {role === "seller" ? <SellerAddProduct /> : <p>Access denied</p>}
+              </PageShell>
+            }
+          />
+
+          <Route
+            path="/admin-dashboard"
+            element={
+              <PageShell title={pageNames.adminDashboard} onBack={handleBack}>
+                {role === "admin" ? <AdminDashboard /> : <p>Access denied</p>}
+              </PageShell>
+            }
+          />
+
+          <Route
+            path="/marketplace"
+            element={
+              <PageShell title={pageNames.marketplace} onBack={handleBack}>
+                <Marketplace />
+              </PageShell>
+            }
+          />
+
+          <Route
+            path="/help"
+            element={
+              <PageShell title={pageNames.help} onBack={handleBack}>
+                <HelpSupport />
+              </PageShell>
+            }
+          />
+
+          <Route
+            path="/checkout"
+            element={
+              <PageShell title={pageNames.checkout} onBack={handleBack}>
+                <Checkout setCurrentPage={navHandler} />
+              </PageShell>
+            }
+          />
+
+          <Route
+            path="/order-success"
+            element={
+              <PageShell title={pageNames.orderSuccess} onBack={handleBack}>
+                <OrderSuccess setCurrentPage={(p) => navHandler(p as string)} />
+              </PageShell>
+            }
+          />
+
+          <Route
+            path="/signup"
+            element={<Signup onSignedUp={() => handlePageChange("home")} />}
+          />
+
+          <Route
+            path="/login"
+            element={<Login setCurrentPage={navHandler} />}
+          />
+
+          <Route
+            path="/notifications"
+            element={
+              <PageShell title={pageNames.notifications} onBack={handleBack}>
+                <Notifications
+                  onSelectNotification={(id) =>
+                    handlePageChange("notificationDetail", { notificationId: id })
+                  }
+                />
+              </PageShell>
+            }
+          />
+
+          <Route
+            path="/notification/:notificationId"
+            element={<NotificationDetailRoute onBack={handleBack} />}
+          />
+
+          <Route
+            path="/categories"
+            element={
+              <PageShell title={pageNames.categories} onBack={handleBack}>
+                <Categories onChangePage={(p: string) => navHandler(p)} />
+              </PageShell>
+            }
+          />
+
+          <Route
+            path="/category/:categoryId"
+            element={<CategoryProductsRoute onBack={handleBack} />}
+          />
+
+          <Route
+            path="*"
+            element={
+              <Home
+                onChangePage={navHandler}
+                onSelectProduct={(id) =>
+                  handlePageChange("productDetail", { productId: id })
+                }
+              />
+            }
+          />
+        </Routes>
+      </main>
     </>
+  );
+}
+
+export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowSplash(false), 2500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <SearchProvider>
+      <AuthProvider>
+        <CartProvider>
+          <WishlistProvider>
+            {showSplash ? (
+              <SplashScreen onFinish={() => setShowSplash(false)} />
+            ) : (
+              <AppContent />
+            )}
+          </WishlistProvider>
+        </CartProvider>
+      </AuthProvider>
+    </SearchProvider>
   );
 }
