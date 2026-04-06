@@ -240,21 +240,7 @@ function AppContent() {
 
   
 
-const [initialRedirectDone, setInitialRedirectDone] = useState(false);
-
-useEffect(() => {
-  // Only redirect on first load after login
-  if (!initialRedirectDone && role) {
-    if (role === "admin") {
-      navigate("/admin-dashboard", { replace: true });
-    } else if (role === "seller") {
-      navigate("/seller-dashboard", { replace: true });
-    } else if (role === "buyer") {
-      navigate("/profile", { replace: true });
-    }
-    setInitialRedirectDone(true); // mark redirect as done
-  }
-}, [role, navigate, initialRedirectDone]);
+  
   const handleBack = (): void => {
     if (window.history.length > 1) {
       navigate(-1);

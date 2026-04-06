@@ -1,32 +1,35 @@
 // src/pages/Login.tsx
-
-import { useState, useEffect } from "react";
-import { signInWithPopup } from "firebase/auth";
+import { useState } from "react";
+import { signInWithPopup, signInWithRedirect, getRedirectResult } from "firebase/auth";
 import { auth, provider } from "../firebase/config";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface LoginProps {
   setCurrentPage: (page: string) => void;
 }
 
-export default function Login({ setCurrentPage }: LoginProps) {
-  const { login, role } = useAuth();
+export default function Login({ }: LoginProps) {
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  useEffect(() => {
-    if (role === "admin") {
-      setCurrentPage("adminDashboard");
-    } else if (role === "seller") {
-      setCurrentPage("sellerDashboard");
-    } else if (role === "buyer") {
-      setCurrentPage("profile");
-    }
-  }, [role, setCurrentPage]);
+  // Handle redirect result on mobile
+  useState(() => {
+    getRedirectResult(auth).then((result) => {
+      if (result?.user) {
+        toast.success("Signed in with Google!");
+        navigate("/"); // redirect to home after login
+      }
+    }).catch((err) => {
+      console.error(err);
+    });
+  });
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,24 +49,15 @@ export default function Login({ setCurrentPage }: LoginProps) {
     try {
       await login(email.trim(), password);
       toast.success("Login successful!");
+      navigate("/"); // Redirect to home after login
     } catch (err: any) {
       const code = err?.code || "";
-
-      if (code === "auth/user-not-found") {
-        toast.error("Account not found. Please sign up.");
-      } else if (code === "auth/wrong-password") {
-        toast.error("Incorrect password.");
-      } else if (code === "Error (auth/invalid-credential)") {
-        toast.error("Unable to log you in, please try again.");
-      } else if (code === "auth/invalid-email") {
-        toast.error("Please enter a valid email address.");
-      } else if (code === "auth/too-many-requests") {
-        toast.error("Too many attempts. Please try again later.");
-      } else if (code === "auth/network-request-failed") {
-        toast.error("Network error. Please check your internet.");
-      } else {
-        toast.error("Invalid email or password.");
-      }
+      if (code === "auth/user-not-found") toast.error("Account not found. Please sign up.");
+      else if (code === "auth/wrong-password") toast.error("Incorrect password.");
+      else if (code === "auth/invalid-email") toast.error("Please enter a valid email address.");
+      else if (code === "auth/too-many-requests") toast.error("Too many attempts. Please try again later.");
+      else if (code === "auth/network-request-failed") toast.error("Network error. Please check your internet.");
+      else toast.error("Invalid email or password.");
     } finally {
       setLoading(false);
     }
@@ -78,18 +72,20 @@ export default function Login({ setCurrentPage }: LoginProps) {
     setGoogleLoading(true);
 
     try {
-      await signInWithPopup(auth, provider);
-      toast.success("Signed in with Google!");
+      // Detect mobile: use redirect instead of popup
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        await signInWithRedirect(auth, provider);
+      } else {
+        await signInWithPopup(auth, provider);
+        toast.success("Signed in with Google!");
+        navigate("/"); // redirect to home
+      }
     } catch (error: any) {
       const code = error?.code || "";
-
-      if (code === "auth/popup-closed-by-user") {
-        toast.error("Google sign-in was closed.");
-      } else if (code === "auth/network-request-failed") {
-        toast.error("Network error. Please check your internet.");
-      } else {
-        toast.error("Google sign-in failed.");
-      }
+      if (code === "auth/popup-closed-by-user") toast.error("Google sign-in was closed.");
+      else if (code === "auth/network-request-failed") toast.error("Network error. Please check your internet.");
+      else toast.error("Google sign-in failed.");
     } finally {
       setGoogleLoading(false);
     }

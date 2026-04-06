@@ -1,20 +1,47 @@
-import { useState } from "react";
+// src/pages/Signup.tsx
+import { useState, useEffect } from "react";
 import {
   createUserWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
 } from "firebase/auth";
 import { auth, db, provider } from "../firebase/config";
 import { doc, setDoc } from "firebase/firestore";
-import { toast } from "react-hot-toast"; // optional: nicer notifications
+import { toast } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 interface SignupProps {
-  onSignedUp?: () => void; // callback after signup to hide buttons
+  onSignedUp?: () => void;
 }
 
 export default function Signup({ onSignedUp }: SignupProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"buyer" | "seller">("buyer");
+  const navigate = useNavigate();
+
+  // Handle redirect result for mobile Google signup
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result?.user) {
+          const user = result.user;
+          await setDoc(doc(db, "users", user.uid), {
+            userId: user.uid,
+            email: user.email,
+            role,
+            status: "active",
+          });
+          toast.success("Signed in with Google successfully!");
+          navigate("/"); // redirect to home
+          if (onSignedUp) onSignedUp();
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  }, [role, navigate, onSignedUp]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +59,7 @@ export default function Signup({ onSignedUp }: SignupProps) {
 
       toast.success("Account created successfully!");
       if (onSignedUp) onSignedUp();
+      navigate("/"); // redirect to home
     } catch (error: any) {
       toast.error(error.message);
     }
@@ -39,20 +67,27 @@ export default function Signup({ onSignedUp }: SignupProps) {
 
   const handleGoogleSignup = async () => {
     try {
-      const userCredential = await signInWithPopup(auth, provider);
-      const user = userCredential.user;
-
-      await setDoc(doc(db, "users", user.uid), {
-        userId: user.uid,
-        email: user.email,
-        role,
-        status: "active",
-      });
-
-      toast.success("Signed in with Google successfully!");
-      if (onSignedUp) onSignedUp();
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        await signInWithRedirect(auth, provider); // mobile-friendly
+      } else {
+        const userCredential = await signInWithPopup(auth, provider);
+        const user = userCredential.user;
+        await setDoc(doc(db, "users", user.uid), {
+          userId: user.uid,
+          email: user.email,
+          role,
+          status: "active",
+        });
+        toast.success("Signed in with Google successfully!");
+        if (onSignedUp) onSignedUp();
+        navigate("/"); // redirect to home
+      }
     } catch (error: any) {
-      toast.error(error.message);
+      const code = error?.code || "";
+      if (code === "auth/popup-closed-by-user") toast.error("Google sign-in was closed.");
+      else if (code === "auth/network-request-failed") toast.error("Network error. Please check your internet.");
+      else toast.error("Google sign-in failed.");
     }
   };
 
@@ -82,8 +117,8 @@ export default function Signup({ onSignedUp }: SignupProps) {
           onChange={(e) => setRole(e.target.value as "buyer" | "seller")}
           style={styles.input}
         >
-          <option value="buyer">Sign in as Buyer</option>
-          <option value="seller">Sign in as Seller</option>
+          <option value="buyer">Sign up as Buyer</option>
+          <option value="seller">Sign up as Seller</option>
         </select>
         <button type="submit" style={styles.button}>Sign Up</button>
       </form>
