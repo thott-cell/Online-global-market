@@ -238,16 +238,17 @@ function AppContent() {
     };
   }, []);
 
-  useEffect(() => {
+  
+
+useEffect(() => {
+  if (location.pathname === "/" || location.pathname === "/login" || location.pathname === "/signup") {
     if (role === "admin") {
       navigate("/admin-dashboard", { replace: true });
     } else if (role === "seller") {
       navigate("/seller-dashboard", { replace: true });
-    } else if (role === "buyer") {
-      navigate("/profile", { replace: true });
     }
-  }, [role, navigate]);
-
+  }
+}, [role, location.pathname, navigate]);
   const handleBack = (): void => {
     if (window.history.length > 1) {
       navigate(-1);

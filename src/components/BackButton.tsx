@@ -1,15 +1,31 @@
 // src/components/BackButton.tsx
 import { type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface BackButtonProps {
-  onBack: () => void;
-  children?: ReactNode; // allow page name next to arrow
+  onBack?: () => void; // optional; fallback to navigate(-1)
+  children?: ReactNode; // page name next to arrow
 }
 
 export default function BackButton({ onBack, children }: BackButtonProps) {
+  const navigate = useNavigate();
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else {
+      // go back in history, fallback to home if no history
+      if (window.history.length > 1) {
+        navigate(-1);
+      } else {
+        navigate("/", { replace: true });
+      }
+    }
+  };
+
   return (
     <div
-      onClick={onBack}
+      onClick={handleBack}
       style={{
         position: "fixed",
         top: "15px",
