@@ -2,9 +2,11 @@
 import { useState } from "react";
 import { signInWithPopup, signInWithRedirect, getRedirectResult } from "firebase/auth";
 import { auth, provider } from "../firebase/config";
+import {sendPasswordResetEmail} from "firebase/auth"
 import { toast } from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import {FaEye, FaEyeSlash} from "react-icons/fa"
 
 interface LoginProps {
   setCurrentPage: (page: string) => void;
@@ -13,7 +15,7 @@ interface LoginProps {
 export default function Login({ }: LoginProps) {
   const { login } = useAuth();
   const navigate = useNavigate();
-
+const [showPassword, setShowPassword] = useState(false);//hhhhhhhhhhhh
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,6 +32,27 @@ export default function Login({ }: LoginProps) {
       console.error(err);
     });
   });
+  const handleForgotPassword = async () => {
+  if (!email.trim()) {
+    toast.error("Enter your email first.");
+    return;
+  }
+
+  try {
+    await sendPasswordResetEmail(auth, email.trim());
+    toast.success("Password reset link sent to your email.");
+  } catch (error: any) {
+    const code = error?.code || "";
+
+    if (code === "auth/user-not-found") {
+      toast.error("No account found with this email.");
+    } else if (code === "auth/invalid-email") {
+      toast.error("Invalid email address.");
+    } else {
+      toast.error("Failed to send reset email.");
+    }
+  }
+};
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,15 +128,35 @@ export default function Login({ }: LoginProps) {
           style={{ padding: 10, borderRadius: 5, border: "1px solid #ccc" }}
         />
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          style={{ padding: 10, borderRadius: 5, border: "1px solid #ccc" }}
-        />
+     <div style={{ position: "relative" }}>
+  <input
+    type={showPassword ? "text" : "password"}
+    placeholder="Password"
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+    required
+    style={{
+      padding: "10px",
+      borderRadius: "5px",
+      border: "1px solid #ccc",
+      width: "100%",
+    }}
+  />
 
+  <span
+    onClick={() => setShowPassword(!showPassword)}
+    style={{
+      position: "absolute",
+      right: 10,
+      top: "50%",
+      transform: "translateY(-50%)",
+      cursor: "pointer",
+      color: "#555",
+    }}
+  >
+    {showPassword ? <FaEyeSlash /> : <FaEye />}
+  </span>
+</div>
         <button
           type="submit"
           disabled={loading}
@@ -145,6 +188,17 @@ export default function Login({ }: LoginProps) {
       >
         {googleLoading ? "Please wait..." : "Continue with Google"}
       </button>
+      <p
+  onClick={handleForgotPassword}
+  style={{
+    textAlign: "right",
+    fontSize: 12,
+    cursor: "pointer",
+    color: "#007bff",
+  }}
+>
+  Forgot Password?
+</p>
     </div>
   );
 }

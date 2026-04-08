@@ -10,6 +10,8 @@ import { auth, db, provider } from "../firebase/config";
 import { doc, setDoc } from "firebase/firestore";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import {FaEye, FaEyeSlash} from "react-icons/fa"
+
 
 interface SignupProps {
   onSignedUp?: () => void;
@@ -20,6 +22,7 @@ export default function Signup({ onSignedUp }: SignupProps) {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"buyer" | "seller">("buyer");
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
 
   // Handle redirect result for mobile Google signup
   useEffect(() => {
@@ -104,14 +107,35 @@ export default function Signup({ onSignedUp }: SignupProps) {
           required
           style={styles.input}
         />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          style={styles.input}
-        />
+        <div style={{ position: "relative" }}>
+  <input
+    type={showPassword ? "text" : "password"}
+    placeholder="Password"
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+    required
+    style={{
+      padding: "10px",
+      borderRadius: "5px",
+      border: "1px solid #ccc",
+      width: "100%",
+    }}
+  />
+
+  <span
+    onClick={() => setShowPassword(!showPassword)}
+    style={{
+      position: "absolute",
+      right: 10,
+      top: "50%",
+      transform: "translateY(-50%)",
+      cursor: "pointer",
+      color: "#555",
+    }}
+  >
+    {showPassword ? <FaEyeSlash /> : <FaEye />}
+  </span>
+</div>
         <select
           value={role}
           onChange={(e) => setRole(e.target.value as "buyer" | "seller")}
