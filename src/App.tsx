@@ -1,6 +1,12 @@
 // src/App.tsx
-import { useEffect, useState } from "react";
-import { Routes, Route, useLocation, useNavigate, useParams } from "react-router-dom";
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
+import {
+  Routes,
+  Route,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
 import { SearchProvider } from "./context/SearchContext";
@@ -12,30 +18,30 @@ import Navbar from "./components/Navbar";
 import BackButton from "./components/BackButton";
 import SplashScreen from "./components/SplashScreen";
 
-import Home from "./components/Home";
-import Favorite from "./components/Favorite";
-import Profile from "./components/Profile";
+const Home = lazy(() => import("./components/Home"));
+const Favorite = lazy(() => import("./components/Favorite"));
+const Profile = lazy(() => import("./components/Profile"));
 
-import OrderSuccess from "./pages/OrderSuccess";
-import OrderDetail from "./pages/OrderDetail";
-import ProductDetail from "./pages/ProductDetail";
-import Notifications from "./pages/Notifications";
-import NotificationDetail from "./pages/NotificationDetail";
-import Signup from "./pages/Signup";
-import Login from "./pages/Login";
-import Orders from "./pages/Order";
-import SavedAddresses from "./pages/SavedAddress";
-import PaymentMethods from "./pages/PaymentMethods";
-import AccountSettings from "./pages/AccountSettings";
-import SellerDashboard from "./pages/SellerDashboard";
-import SellerAddProduct from "./pages/SellerAddProduct";
-import AdminDashboard from "./pages/AdminDashboard";
-import Marketplace from "./pages/Marketplace";
-import HelpSupport from "./pages/HelpSupport";
-import Checkout from "./pages/Checkout";
-import Cart from "./pages/Cart";
-import Categories from "./pages/Categories";
-import CategoryProducts from "./pages/CategoryProducts";
+const OrderSuccess = lazy(() => import("./pages/OrderSuccess"));
+const OrderDetail = lazy(() => import("./pages/OrderDetail"));
+const ProductDetail = lazy(() => import("./pages/ProductDetail"));
+const Notifications = lazy(() => import("./pages/Notifications"));
+const NotificationDetail = lazy(() => import("./pages/NotificationDetail"));
+const Signup = lazy(() => import("./pages/Signup"));
+const Login = lazy(() => import("./pages/Login"));
+const Orders = lazy(() => import("./pages/Order"));
+const SavedAddresses = lazy(() => import("./pages/SavedAddress"));
+const PaymentMethods = lazy(() => import("./pages/PaymentMethods"));
+const AccountSettings = lazy(() => import("./pages/AccountSettings"));
+const SellerDashboard = lazy(() => import("./pages/SellerDashboard"));
+const SellerAddProduct = lazy(() => import("./pages/SellerAddProduct"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const Marketplace = lazy(() => import("./pages/Marketplace"));
+const HelpSupport = lazy(() => import("./pages/HelpSupport"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const Cart = lazy(() => import("./pages/Cart"));
+const Categories = lazy(() => import("./pages/Categories"));
+const CategoryProducts = lazy(() => import("./pages/CategoryProducts"));
 
 type Page =
   | "home"
@@ -128,7 +134,7 @@ function PageShell({
 }: {
   title: string;
   onBack: () => void;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <>
@@ -213,6 +219,10 @@ function OrderDetailRoute({ onBack }: { onBack: () => void }) {
   );
 }
 
+function RouteLoader() {
+  return <div style={{ padding: 16 }}>Loading page...</div>;
+}
+
 function AppContent() {
   const { cartItems } = useCart();
   const { role, logout } = useAuth();
@@ -238,9 +248,6 @@ function AppContent() {
     };
   }, []);
 
-  
-
-  
   const handleBack = (): void => {
     if (window.history.length > 1) {
       navigate(-1);
@@ -249,10 +256,7 @@ function AppContent() {
     }
   };
 
-  const handlePageChange = (
-    page: Page | string,
-    extra?: NavExtra | string
-  ) => {
+  const handlePageChange = (page: Page | string, extra?: NavExtra | string) => {
     const pageStr = page as string;
 
     if (pageStr === "signout") {
@@ -352,16 +356,14 @@ function AppContent() {
     }
   };
 
-  const navHandler = (
-    page: string,
-    extra?: NavExtra | string
-  ) => {
+  const navHandler = (page: string, extra?: NavExtra | string) => {
     handlePageChange(page, extra);
   };
 
   return (
     <>
       <Toaster position="top-right" />
+
       {isOffline && (
         <div
           style={{
@@ -386,221 +388,228 @@ function AppContent() {
       />
 
       <main>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <Home
-                onChangePage={navHandler}
-                onSelectProduct={(id) =>
-                  handlePageChange("productDetail", { productId: id })
-                }
-              />
-            }
-          />
-
-          <Route
-            path="/menu"
-            element={
-              <Home
-                onChangePage={navHandler}
-                onSelectProduct={(id) =>
-                  handlePageChange("productDetail", { productId: id })
-                }
-              />
-            }
-          />
-
-          <Route
-            path="/cart"
-            element={
-              <PageShell title={pageNames.cart} onBack={handleBack}>
-                <Cart setCurrentPage={navHandler} />
-              </PageShell>
-            }
-          />
-
-          <Route
-            path="/product/:productId"
-            element={<ProductDetailRoute onBack={handleBack} />}
-          />
-
-          <Route
-            path="/favorite"
-            element={
-              <PageShell title={pageNames.favorite} onBack={handleBack}>
-                <Favorite />
-              </PageShell>
-            }
-          />
-
-          <Route
-            path="/profile"
-            element={
-              <PageShell title={pageNames.profile} onBack={handleBack}>
-                <Profile onChangePage={(p) => handlePageChange(p as Page)} />
-              </PageShell>
-            }
-          />
-
-          <Route
-            path="/orders"
-            element={
-              <PageShell title={pageNames.orders} onBack={handleBack}>
-                <Orders setCurrentPage={navHandler} />
-              </PageShell>
-            }
-          />
-
-          <Route
-            path="/order/:orderId"
-            element={<OrderDetailRoute onBack={handleBack} />}
-          />
-
-          <Route
-            path="/addresses"
-            element={
-              <PageShell title={pageNames.addresses} onBack={handleBack}>
-                <SavedAddresses onSaved={() => handlePageChange("addresses")} />
-              </PageShell>
-            }
-          />
-
-          <Route
-            path="/payments"
-            element={
-              <PageShell title={pageNames.payments} onBack={handleBack}>
-                <PaymentMethods />
-              </PageShell>
-            }
-          />
-
-          <Route
-            path="/account-settings"
-            element={
-              <PageShell title={pageNames.accountSettings} onBack={handleBack}>
-                <AccountSettings />
-              </PageShell>
-            }
-          />
-
-          <Route
-            path="/seller-dashboard"
-            element={
-              <PageShell title={pageNames.sellerDashboard} onBack={handleBack}>
-                {role === "seller" ? <SellerDashboard /> : <p>Access denied</p>}
-              </PageShell>
-            }
-          />
-
-          <Route
-            path="/seller-add-product"
-            element={
-              <PageShell title={pageNames.sellerAddProduct} onBack={handleBack}>
-                {role === "seller" ? <SellerAddProduct /> : <p>Access denied</p>}
-              </PageShell>
-            }
-          />
-
-          <Route
-            path="/admin-dashboard"
-            element={
-              <PageShell title={pageNames.adminDashboard} onBack={handleBack}>
-                {role === "admin" ? <AdminDashboard /> : <p>Access denied</p>}
-              </PageShell>
-            }
-          />
-
-          <Route
-            path="/marketplace"
-            element={
-              <PageShell title={pageNames.marketplace} onBack={handleBack}>
-                <Marketplace />
-              </PageShell>
-            }
-          />
-
-          <Route
-            path="/help"
-            element={
-              <PageShell title={pageNames.help} onBack={handleBack}>
-                <HelpSupport />
-              </PageShell>
-            }
-          />
-
-          <Route
-            path="/checkout"
-            element={
-              <PageShell title={pageNames.checkout} onBack={handleBack}>
-                <Checkout setCurrentPage={navHandler} />
-              </PageShell>
-            }
-          />
-
-          <Route
-            path="/order-success"
-            element={
-              <PageShell title={pageNames.orderSuccess} onBack={handleBack}>
-                <OrderSuccess setCurrentPage={(p) => navHandler(p as string)} />
-              </PageShell>
-            }
-          />
-
-          <Route
-            path="/signup"
-            element={<Signup onSignedUp={() => handlePageChange("home")} />}
-          />
-
-          <Route
-            path="/login"
-            element={<Login setCurrentPage={navHandler} />}
-          />
-
-          <Route
-            path="/notifications"
-            element={
-              <PageShell title={pageNames.notifications} onBack={handleBack}>
-                <Notifications
-                  onSelectNotification={(id) =>
-                    handlePageChange("notificationDetail", { notificationId: id })
+        <Suspense fallback={<RouteLoader />}>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <Home
+                  onChangePage={navHandler}
+                  onSelectProduct={(id) =>
+                    handlePageChange("productDetail", { productId: id })
                   }
                 />
-              </PageShell>
-            }
-          />
+              }
+            />
 
-          <Route
-            path="/notification/:notificationId"
-            element={<NotificationDetailRoute onBack={handleBack} />}
-          />
+            <Route
+              path="/menu"
+              element={
+                <Home
+                  onChangePage={navHandler}
+                  onSelectProduct={(id) =>
+                    handlePageChange("productDetail", { productId: id })
+                  }
+                />
+              }
+            />
 
-          <Route
-            path="/categories"
-            element={
-              <PageShell title={pageNames.categories} onBack={handleBack}>
-                <Categories onChangePage={(p: string) => navHandler(p)} />
-              </PageShell>
-            }
-          />
+            <Route
+              path="/cart"
+              element={
+                <PageShell title={pageNames.cart} onBack={handleBack}>
+                  <Cart setCurrentPage={navHandler} />
+                </PageShell>
+              }
+            />
 
-          <Route
-            path="/category/:categoryId"
-            element={<CategoryProductsRoute onBack={handleBack} />}
-          />
+            <Route
+              path="/product/:productId"
+              element={<ProductDetailRoute onBack={handleBack} />}
+            />
 
-          <Route
-            path="*"
-            element={
-              <Home
-                onChangePage={navHandler}
-                onSelectProduct={(id) =>
-                  handlePageChange("productDetail", { productId: id })
-                }
-              />
-            }
-          />
-        </Routes>
+            <Route
+              path="/favorite"
+              element={
+                <PageShell title={pageNames.favorite} onBack={handleBack}>
+                  <Favorite />
+                </PageShell>
+              }
+            />
+
+            <Route
+              path="/profile"
+              element={
+                <PageShell title={pageNames.profile} onBack={handleBack}>
+                  <Profile onChangePage={(p) => handlePageChange(p as Page)} />
+                </PageShell>
+              }
+            />
+
+            <Route
+              path="/orders"
+              element={
+                <PageShell title={pageNames.orders} onBack={handleBack}>
+                  <Orders setCurrentPage={navHandler} />
+                </PageShell>
+              }
+            />
+
+            <Route
+              path="/order/:orderId"
+              element={<OrderDetailRoute onBack={handleBack} />}
+            />
+
+            <Route
+              path="/addresses"
+              element={
+                <PageShell title={pageNames.addresses} onBack={handleBack}>
+                  <SavedAddresses
+                    onSaved={() => handlePageChange("addresses")}
+                  />
+                </PageShell>
+              }
+            />
+
+            <Route
+              path="/payments"
+              element={
+                <PageShell title={pageNames.payments} onBack={handleBack}>
+                  <PaymentMethods />
+                </PageShell>
+              }
+            />
+
+            <Route
+              path="/account-settings"
+              element={
+                <PageShell title={pageNames.accountSettings} onBack={handleBack}>
+                  <AccountSettings />
+                </PageShell>
+              }
+            />
+
+            <Route
+              path="/seller-dashboard"
+              element={
+                <PageShell title={pageNames.sellerDashboard} onBack={handleBack}>
+                  {role === "seller" ? <SellerDashboard /> : <p>Access denied</p>}
+                </PageShell>
+              }
+            />
+
+            <Route
+              path="/seller-add-product"
+              element={
+                <PageShell title={pageNames.sellerAddProduct} onBack={handleBack}>
+                  {role === "seller" ? (
+                    <SellerAddProduct />
+                  ) : (
+                    <p>Access denied</p>
+                  )}
+                </PageShell>
+              }
+            />
+
+            <Route
+              path="/admin-dashboard"
+              element={
+                <PageShell title={pageNames.adminDashboard} onBack={handleBack}>
+                  {role === "admin" ? <AdminDashboard /> : <p>Access denied</p>}
+                </PageShell>
+              }
+            />
+
+            <Route
+              path="/marketplace"
+              element={
+                <PageShell title={pageNames.marketplace} onBack={handleBack}>
+                  <Marketplace />
+                </PageShell>
+              }
+            />
+
+            <Route
+              path="/help"
+              element={
+                <PageShell title={pageNames.help} onBack={handleBack}>
+                  <HelpSupport />
+                </PageShell>
+              }
+            />
+
+            <Route
+              path="/checkout"
+              element={
+                <PageShell title={pageNames.checkout} onBack={handleBack}>
+                  <Checkout setCurrentPage={navHandler} />
+                </PageShell>
+              }
+            />
+
+            <Route
+              path="/order-success"
+              element={
+                <PageShell title={pageNames.orderSuccess} onBack={handleBack}>
+                  <OrderSuccess setCurrentPage={(p) => navHandler(p as string)} />
+                </PageShell>
+              }
+            />
+
+            <Route
+              path="/signup"
+              element={<Signup onSignedUp={() => handlePageChange("home")} />}
+            />
+
+            <Route path="/login" element={<Login setCurrentPage={navHandler} />} />
+
+            <Route
+              path="/notifications"
+              element={
+                <PageShell title={pageNames.notifications} onBack={handleBack}>
+                  <Notifications
+                    onSelectNotification={(id) =>
+                      handlePageChange("notificationDetail", {
+                        notificationId: id,
+                      })
+                    }
+                  />
+                </PageShell>
+              }
+            />
+
+            <Route
+              path="/notification/:notificationId"
+              element={<NotificationDetailRoute onBack={handleBack} />}
+            />
+
+            <Route
+              path="/categories"
+              element={
+                <PageShell title={pageNames.categories} onBack={handleBack}>
+                  <Categories onChangePage={(p: string) => navHandler(p)} />
+                </PageShell>
+              }
+            />
+
+            <Route
+              path="/category/:categoryId"
+              element={<CategoryProductsRoute onBack={handleBack} />}
+            />
+
+            <Route
+              path="*"
+              element={
+                <Home
+                  onChangePage={navHandler}
+                  onSelectProduct={(id) =>
+                    handlePageChange("productDetail", { productId: id })
+                  }
+                />
+              }
+            />
+          </Routes>
+        </Suspense>
       </main>
     </>
   );
@@ -623,6 +632,7 @@ export default function App() {
       return () => clearTimeout(timer);
     }
   }, []);
+
   return (
     <SearchProvider>
       <AuthProvider>
