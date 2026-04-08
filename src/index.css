@@ -241,7 +241,7 @@ main{
 @media (max-width:768px){
 
   .product-grid{
-    grid-template-columns:38% 38%;
+    grid-template-columns:48% 48%;
     gap:4%;
     padding-left:2%;
     padding-right:2%;
