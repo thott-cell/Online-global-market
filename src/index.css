@@ -46,7 +46,6 @@ main{
 .logo img{
   height:90px;
   width:170px;
-  font-size: 200px;
 }
 
 .nav-links{
@@ -247,7 +246,7 @@ main{
     padding-left:2%;
     padding-right:2%;
   }
-
+ 
 }
 
 
@@ -523,12 +522,26 @@ form button:hover{
     display:flex;
     justify-content:space-between;
     align-items:center;
-    padding:4%;
+    padding:8px 10px;
     background:#fff;
     position:sticky;
     top:0;
     box-shadow:0 2px 8px rgba(0,0,0,0.05);
     z-index:100;
+  }
+
+  .nav-action .logo{
+    display:flex;
+    align-items:center;
+    margin:0;
+    padding:0;
+    flex:0 0 auto;
+  }
+
+  .nav-action .logo img{
+    height:70px;
+    width:100px;
+    display:block;
   }
 
   .mobile-nav{
