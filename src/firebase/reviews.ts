@@ -6,20 +6,30 @@ import {
   where,
   serverTimestamp,
 } from "firebase/firestore";
-import { db } from "../firebase/config";// make sure this matches your firebase config file
+import { db } from "../firebase/config";
 
-// 🔥 Add a review
+export interface Review {
+  id: string;
+  productId: string;
+  userId: string;
+  rating: number;
+  comment: string;
+  createdAt?: unknown;
+}
+
+type NewReview = {
+  productId: string;
+  userId: string;
+  rating: number;
+  comment: string;
+};
+
 export const addReview = async ({
   productId,
   userId,
   rating,
   comment,
-}: {
-  productId: string;
-  userId: string;
-  rating: number;
-  comment: string;
-}) => {
+}: NewReview) => {
   return await addDoc(collection(db, "reviews"), {
     productId,
     userId,
@@ -29,8 +39,9 @@ export const addReview = async ({
   });
 };
 
-// 📦 Get all reviews for a product
-export const getProductReviews = async (productId: string) => {
+export const getProductReviews = async (
+  productId: string
+): Promise<Review[]> => {
   const q = query(
     collection(db, "reviews"),
     where("productId", "==", productId)
@@ -38,8 +49,11 @@ export const getProductReviews = async (productId: string) => {
 
   const snapshot = await getDocs(q);
 
-  return snapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  }));
+  return snapshot.docs.map((doc) => {
+    const data = doc.data() as Omit<Review, "id">;
+    return {
+      id: doc.id,
+      ...data,
+    };
+  });
 };
