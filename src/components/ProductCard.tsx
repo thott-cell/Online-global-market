@@ -160,7 +160,7 @@ const ProductCard = ({
           onClick={handleWishlist}
           style={{ width: 36, border: "none", background: "transparent", cursor: "pointer" }}
         >
-          {isWishlisted ? <FaHeart color="red" /> : <FaRegHeart color="#444" />}
+          {isWishlisted ? <FaHeart color="green" /> : <FaRegHeart color="#444" />}
         </button>
       </div>
     </div>
