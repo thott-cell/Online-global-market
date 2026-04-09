@@ -1,4 +1,3 @@
-// src/components/ProfileMenu.tsx
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { db } from "../firebase/config";
@@ -23,6 +22,7 @@ import {
   faTools,
   faQuestionCircle,
   faSignOutAlt,
+  faComments,
 } from "@fortawesome/free-solid-svg-icons";
 
 interface Notification {
@@ -44,7 +44,9 @@ const ProfileMenu = ({ onNavigate, role }: ProfileMenuProps) => {
   const [approvedProductsCount, setApprovedProductsCount] = useState(0);
   const [ordersCount, setOrdersCount] = useState(0);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const [messageChatsCount, setMessageChatsCount] = useState(0);
+
+  const unreadNotificationCount = notifications.filter((n) => !n.read).length;
 
   useEffect(() => {
     if (!user || role !== "seller") return;
@@ -54,8 +56,12 @@ const ProfileMenu = ({ onNavigate, role }: ProfileMenuProps) => {
 
     const unsubProducts = onSnapshot(qProducts, (snap) => {
       const docs = snap.docs.map((d) => d.data());
-      setPendingProductsCount(docs.filter((p: any) => p.status === "pending").length);
-      setApprovedProductsCount(docs.filter((p: any) => p.status === "approved").length);
+      setPendingProductsCount(
+        docs.filter((p: any) => p.status === "pending").length
+      );
+      setApprovedProductsCount(
+        docs.filter((p: any) => p.status === "approved").length
+      );
     });
 
     const ordersRef = collection(db, "orders");
@@ -98,6 +104,35 @@ const ProfileMenu = ({ onNavigate, role }: ProfileMenuProps) => {
     return () => unsub();
   }, [user]);
 
+  useEffect(() => {
+    if (!user) return;
+
+    const messagesRef = collection(db, "messages");
+    const q = query(messagesRef, where("receiverId", "==", user.uid));
+
+    const unsub = onSnapshot(q, (snap) => {
+      const incomingChatIds = new Set<string>();
+
+      snap.docs.forEach((docItem) => {
+        const data = docItem.data() as {
+          chatId?: string;
+          senderId?: string;
+          receiverId?: string;
+        };
+
+        if (data.chatId && data.senderId && data.receiverId) {
+          if (data.senderId !== user.uid) {
+            incomingChatIds.add(data.chatId);
+          }
+        }
+      });
+
+      setMessageChatsCount(incomingChatIds.size);
+    });
+
+    return () => unsub();
+  }, [user]);
+
   const markAllAsRead = async () => {
     const unread = notifications.filter((n) => !n.read);
 
@@ -113,18 +148,28 @@ const ProfileMenu = ({ onNavigate, role }: ProfileMenuProps) => {
 
   return (
     <div style={styles.menu}>
-      {/* Notifications */}
       {user && (
-        <button
-          style={styles.item}
-          onClick={() => {
-            onNavigate("notifications");
-            setTimeout(markAllAsRead, 100);
-          }}
-        >
-          <FontAwesomeIcon icon={faBell} /> Notifications
-          {unreadCount > 0 && <span style={styles.badge}>{unreadCount}</span>}
-        </button>
+        <>
+          <button
+            style={styles.item}
+            onClick={() => {
+              onNavigate("notifications");
+              setTimeout(markAllAsRead, 100);
+            }}
+          >
+            <FontAwesomeIcon icon={faBell} /> Notifications
+            {unreadNotificationCount > 0 && (
+              <span style={styles.badge}>{unreadNotificationCount}</span>
+            )}
+          </button>
+
+          <button style={styles.item} onClick={() => onNavigate("messages")}>
+            <FontAwesomeIcon icon={faComments} /> Messages
+            {messageChatsCount > 0 && (
+              <span style={styles.badge}>{messageChatsCount}</span>
+            )}
+          </button>
+        </>
       )}
 
       <button style={styles.item} onClick={() => onNavigate("orders")}>
@@ -135,13 +180,10 @@ const ProfileMenu = ({ onNavigate, role }: ProfileMenuProps) => {
         <FontAwesomeIcon icon={faHome} /> Saved Addresses
       </button>
 
-     
-
       <button style={styles.item} onClick={() => onNavigate("accountSettings")}>
         <FontAwesomeIcon icon={faCog} /> Account Settings
       </button>
 
-      {/* SELLER */}
       {showSellerBlock && (
         <>
           <hr style={styles.sep} />
@@ -168,7 +210,6 @@ const ProfileMenu = ({ onNavigate, role }: ProfileMenuProps) => {
         </>
       )}
 
-      {/* ADMIN */}
       {showAdminBlock && (
         <>
           <hr style={styles.sep} />
@@ -210,11 +251,12 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     alignItems: "center",
     gap: 10,
+    justifyContent: "flex-start",
   },
 
   sep: { border: "none", borderTop: "1px solid #eee" },
 
-  sellerStats: { display: "flex", gap: 10 },
+  sellerStats: { display: "flex", gap: 10, flexWrap: "wrap" },
 
   badge: {
     background: "#007bff",
@@ -222,6 +264,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 20,
     padding: "4px 8px",
     fontSize: 12,
+    whiteSpace: "nowrap",
   },
 };
 

@@ -1,7 +1,12 @@
-import { useEffect, useState } from "react";
-import { addReview, getProductReviews } from "../firebase/reviews";
+import { useEffect, useMemo, useState } from "react";
+import { addReview, getProductReviews, type Review } from "../firebase/reviews";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-hot-toast";
+
+type ReviewSectionProps = {
+  productId: string;
+  limit?: number;
+};
 
 const Star = ({
   filled,
@@ -24,10 +29,10 @@ const Star = ({
   </span>
 );
 
-export default function ReviewSection({ productId }: { productId: string }) {
+export default function ReviewSection({ productId, limit }: ReviewSectionProps) {
   const { user } = useAuth();
 
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,8 +42,13 @@ export default function ReviewSection({ productId }: { productId: string }) {
   }, [productId]);
 
   const loadReviews = async () => {
-    const data = await getProductReviews(productId);
-    setReviews(data);
+    try {
+      const data = await getProductReviews(productId);
+      setReviews(data);
+    } catch (err) {
+      console.error("Failed to load reviews:", err);
+      toast.error("Failed to load reviews");
+    }
   };
 
   const handleSubmit = async () => {
@@ -74,10 +84,15 @@ export default function ReviewSection({ productId }: { productId: string }) {
   };
 
   const reviewCount = reviews.length;
-  const averageRating =
-    reviewCount > 0
+
+  const averageRating = useMemo(() => {
+    return reviewCount > 0
       ? reviews.reduce((sum, r) => sum + Number(r.rating || 0), 0) / reviewCount
       : 0;
+  }, [reviews, reviewCount]);
+
+  const visibleReviews =
+    typeof limit === "number" ? reviews.slice(0, limit) : reviews;
 
   return (
     <div
@@ -92,10 +107,11 @@ export default function ReviewSection({ productId }: { productId: string }) {
       <h3 style={{ marginBottom: 8, fontSize: 18, fontWeight: 600 }}>Reviews</h3>
 
       <div style={{ marginBottom: 16 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <strong style={{ fontSize: 16 }}>
             {reviewCount > 0 ? averageRating.toFixed(1) : "0.0"}
           </strong>
+
           <div style={{ display: "flex", alignItems: "center" }}>
             {[1, 2, 3, 4, 5].map((i) => (
               <span
@@ -110,6 +126,7 @@ export default function ReviewSection({ productId }: { productId: string }) {
               </span>
             ))}
           </div>
+
           <span style={{ color: "#666", fontSize: 14 }}>
             ({reviewCount} {reviewCount === 1 ? "review" : "reviews"})
           </span>
@@ -120,7 +137,7 @@ export default function ReviewSection({ productId }: { productId: string }) {
         <p style={{ color: "#666", marginBottom: 12 }}>No reviews yet.</p>
       )}
 
-      {reviews.map((r) => (
+      {visibleReviews.map((r) => (
         <div
           key={r.id}
           style={{

@@ -42,7 +42,8 @@ const Checkout = lazy(() => import("./pages/Checkout"));
 const Cart = lazy(() => import("./pages/Cart"));
 const Categories = lazy(() => import("./pages/Categories"));
 const CategoryProducts = lazy(() => import("./pages/CategoryProducts"));
-
+const Messages = lazy(() => import("./pages/Messages"));
+const Chat = lazy(() => import("./components/ChatBox"));
 type Page =
   | "home"
   | "menu"
@@ -66,12 +67,15 @@ type Page =
   | "notificationDetail"
   | "productDetail"
   | "orderSuccess"
-  | "orderDetail";
+  | "orderDetail"
+  | "messages"
+  | "chat";
 
 type NavExtra = {
   productId?: string;
   notificationId?: string;
   orderId?: string;
+  chatId?: string;
 };
 
 const pageNames: Record<Page, string> = {
@@ -98,6 +102,8 @@ const pageNames: Record<Page, string> = {
   productDetail: "Product Detail",
   orderSuccess: "Order Success",
   orderDetail: "Order Detail",
+  messages: "Messages",
+  chat: "Chat Box"
 };
 
 function getCurrentPageKey(pathname: string): string {
@@ -124,6 +130,8 @@ function getCurrentPageKey(pathname: string): string {
   if (pathname.startsWith("/notification/")) return "notificationDetail";
   if (pathname.startsWith("/order/")) return "orderDetail";
   if (pathname.startsWith("/category/")) return "categories";
+  if (pathname === "/messages") return "messages";
+  if (pathname.startsWith("/chat/")) return "chat";
   return "home";
 }
 
@@ -340,7 +348,19 @@ function AppContent() {
         } else {
           navigate("/");
         }
+        
         return;
+        case "messages":
+  navigate("/messages");
+  return;
+
+case "chat":
+  if (typeof extra === "object" && extra?.chatId) {
+    navigate(`/chat/${extra.chatId}`);
+  } else {
+    navigate("/messages");
+  }
+  return;
       case "orderSuccess":
         navigate("/order-success");
         return;
@@ -422,6 +442,27 @@ function AppContent() {
                 </PageShell>
               }
             />
+            <Route
+  path="/messages"
+  element={
+    <PageShell title={pageNames.messages} onBack={handleBack}>
+      <Messages
+        onOpenChat={(chatId: string): void =>
+          handlePageChange("chat", { chatId })
+        }
+      />
+    </PageShell>
+  }
+/>
+
+<Route
+  path="/chat/:chatId"
+  element={
+    <PageShell title={pageNames.chat} onBack={handleBack}>
+      <Chat sellerId={""} />
+    </PageShell>
+  }
+/>
 
             <Route
               path="/product/:productId"

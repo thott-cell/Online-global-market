@@ -6,6 +6,7 @@ import { formatNaira } from "../utils/formatPrice";
 import { useCart } from "../context/CartContext";
 import { toast } from "react-hot-toast";
 import ReviewSection from "../components/ReviewSection";
+import ChatBox from "../components/ChatBox";
 
 interface ProductDetailProps {
   productId: string;
@@ -26,6 +27,12 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
   const { cartItems, addToCart } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // ⭐ NEW: review toggle
+  const [showAllReviews, setShowAllReviews] = useState(false);
+
+  // 💬 NEW: chat toggle
+  const [showChat, setShowChat] = useState(false);
 
   const isInCart = product
     ? cartItems.some((item) => item.id === product.id)
@@ -178,6 +185,7 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
         </p>
       )}
 
+      {/* 🛒 Add to Cart */}
       <button
         onClick={handleAddToCart}
         disabled={isInCart}
@@ -196,8 +204,52 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
         {isInCart ? "Already in Cart" : "Add to Cart"}
       </button>
 
+      {/* 💬 Chat Button */}
+      {product.sellerId && (
+        <button
+          onClick={() => setShowChat(!showChat)}
+          style={{
+            width: "100%",
+            marginTop: 10,
+            padding: "10px 0",
+            background: "#075E54",
+            color: "#fff",
+            border: "none",
+            borderRadius: 6,
+            fontWeight: "bold",
+            cursor: "pointer",
+          }}
+        >
+          {showChat ? "Close Chat" : "Chat with Seller 💬"}
+        </button>
+      )}
+
+      {/* 💬 Chat Box */}
+      {showChat && product.sellerId && (
+        <ChatBox sellerId={product.sellerId} />
+      )}
+
+      {/* ⭐ Reviews Section */}
       <div style={{ marginTop: 24 }}>
-        <ReviewSection productId={productId} />
+        <ReviewSection
+          productId={productId}
+          limit={showAllReviews ? undefined : 2}
+        />
+
+        {/* Toggle */}
+        <button
+          onClick={() => setShowAllReviews(!showAllReviews)}
+          style={{
+            marginTop: 10,
+            background: "transparent",
+            border: "none",
+            color: "#007bff",
+            cursor: "pointer",
+            fontWeight: "bold",
+          }}
+        >
+          {showAllReviews ? "Hide reviews" : "See more reviews"}
+        </button>
       </div>
     </div>
   );
