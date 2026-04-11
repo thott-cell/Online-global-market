@@ -1,7 +1,6 @@
 import {
   collection,
   addDoc,
-  getDocs,
   query,
   where,
   orderBy,
@@ -19,7 +18,11 @@ export interface ChatMessage {
   createdAt?: any;
 }
 
-export const getChatId = (a: string, b: string) => [a, b].sort().join("_");
+// ✅ ALWAYS SAFE CHAT ID
+export const getChatId = (a: string, b: string) => {
+  if (!a || !b) return "";
+  return [a, b].sort().join("_");
+};
 
 export const sendMessage = async ({
   chatId,
@@ -32,6 +35,10 @@ export const sendMessage = async ({
   receiverId: string;
   text: string;
 }) => {
+  if (!chatId || !senderId || !receiverId || !text) {
+    throw new Error("Missing chat fields");
+  }
+
   return await addDoc(collection(db, "messages"), {
     chatId,
     senderId,
@@ -41,25 +48,12 @@ export const sendMessage = async ({
   });
 };
 
-export const getMessagesForChat = async (chatId: string): Promise<ChatMessage[]> => {
-  const q = query(
-    collection(db, "messages"),
-    where("chatId", "==", chatId),
-    orderBy("createdAt", "asc")
-  );
-
-  const snapshot = await getDocs(q);
-
-  return snapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...(doc.data() as Omit<ChatMessage, "id">),
-  }));
-};
-
 export const subscribeToMessages = (
   chatId: string,
   callback: (messages: ChatMessage[]) => void
 ) => {
+  if (!chatId) return () => {};
+
   const q = query(
     collection(db, "messages"),
     where("chatId", "==", chatId),

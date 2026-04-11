@@ -1,12 +1,14 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { db } from "../firebase/config";
 import { doc, getDoc } from "firebase/firestore";
 import Loading from "../components/Loading";
 import { formatNaira } from "../utils/formatPrice";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import { toast } from "react-hot-toast";
 import ReviewSection from "../components/ReviewSection";
 import ChatBox from "../components/ChatBox";
+import { getChatId } from "../firebase/chat";
 
 interface ProductDetailProps {
   productId: string;
@@ -24,14 +26,12 @@ interface Product {
 }
 
 const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
+  const { user } = useAuth();
   const { cartItems, addToCart } = useCart();
+
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // ⭐ NEW: review toggle
   const [showAllReviews, setShowAllReviews] = useState(false);
-
-  // 💬 NEW: chat toggle
   const [showChat, setShowChat] = useState(false);
 
   const isInCart = product
@@ -61,6 +61,11 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
   useEffect(() => {
     fetchProduct();
   }, [fetchProduct]);
+
+  const chatId = useMemo(() => {
+    if (!user?.uid || !product?.sellerId) return "";
+    return getChatId(user.uid, product.sellerId);
+  }, [user?.uid, product?.sellerId]);
 
   if (loading) return <Loading message="Loading product..." />;
 
@@ -97,6 +102,15 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
     });
 
     toast.success("Product added to cart!");
+  };
+
+  const handleChatToggle = () => {
+    if (!product.sellerId) {
+      toast.error("Seller not available for this product.");
+      return;
+    }
+
+    setShowChat((prev) => !prev);
   };
 
   return (
@@ -185,7 +199,6 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
         </p>
       )}
 
-      {/* 🛒 Add to Cart */}
       <button
         onClick={handleAddToCart}
         disabled={isInCart}
@@ -204,10 +217,9 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
         {isInCart ? "Already in Cart" : "Add to Cart"}
       </button>
 
-      {/* 💬 Chat Button */}
       {product.sellerId && (
         <button
-          onClick={() => setShowChat(!showChat)}
+          onClick={handleChatToggle}
           style={{
             width: "100%",
             marginTop: 10,
@@ -224,19 +236,16 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
         </button>
       )}
 
-      {/* 💬 Chat Box */}
       {showChat && product.sellerId && (
-        <ChatBox sellerId={product.sellerId} />
+        <ChatBox chatId={chatId} />
       )}
 
-      {/* ⭐ Reviews Section */}
       <div style={{ marginTop: 24 }}>
         <ReviewSection
           productId={productId}
           limit={showAllReviews ? undefined : 2}
         />
 
-        {/* Toggle */}
         <button
           onClick={() => setShowAllReviews(!showAllReviews)}
           style={{

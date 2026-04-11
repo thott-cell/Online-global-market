@@ -13,7 +13,6 @@ import { SearchProvider } from "./context/SearchContext";
 import { CartProvider, useCart } from "./context/CartContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { WishlistProvider } from "./context/WishlistContext";
-
 import Navbar from "./components/Navbar";
 import BackButton from "./components/BackButton";
 import SplashScreen from "./components/SplashScreen";
@@ -43,7 +42,7 @@ const Cart = lazy(() => import("./pages/Cart"));
 const Categories = lazy(() => import("./pages/Categories"));
 const CategoryProducts = lazy(() => import("./pages/CategoryProducts"));
 const Messages = lazy(() => import("./pages/Messages"));
-const Chat = lazy(() => import("./components/ChatBox"));
+const ChatBox = lazy(() => import("./components/ChatBox"));
 type Page =
   | "home"
   | "menu"
@@ -153,6 +152,13 @@ function PageShell({
       {children}
     </>
   );
+}
+function ChatRoute() {
+  const { chatId } = useParams<{ chatId: string }>();
+
+  if (!chatId) return <p>No chat selected</p>;
+
+  return <ChatBox chatId={chatId} />;
 }
 
 function CategoryProductsRoute({ onBack }: { onBack: () => void }) {
@@ -459,7 +465,7 @@ case "chat":
   path="/chat/:chatId"
   element={
     <PageShell title={pageNames.chat} onBack={handleBack}>
-      <Chat sellerId={""} />
+      <ChatRoute/>
     </PageShell>
   }
 />
