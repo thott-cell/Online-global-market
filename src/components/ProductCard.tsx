@@ -34,7 +34,7 @@ const ProductCard = ({
   sellerId,
   discount,
 }: ProductCardProps) => {
-  const { addToCart } = useCart();
+  useCart();
   const { wishlist, addToWishlist, removeFromWishlist } = useWishlist();
 
   const [reviewCount, setReviewCount] = useState(0);
@@ -102,69 +102,61 @@ const ProductCard = ({
     toast.success("Added to wishlist");
   };
 
-  const handleAddToCart = () => {
-    addToCart({
-      id,
-      title,
-      price: safePrice,
-      discountedPrice,
-      quantity: 1,
-      sellerId: sellerId || "",
-      description: description || "",
-      discount: safeDiscount,
-      imageUrl: imageUrl || "",
-    });
-
-    toast.success("Product added to cart");
-  };
 
   return (
-    <div className="product-card" style={{ border: "1px solid #eee", borderRadius: 8, padding: 12, background: "#fff" }}>
-      <div style={{ position: "relative" }}>
-        {hasDiscount && <span className="discount-badge">-{safeDiscount}%</span>}
-        {imageUrl && <img src={imageUrl} alt={title} style={{ width: "100%", height: 180, objectFit: "cover", borderRadius: 6 }} />}
-      </div>
+  <div
+    className="pm-card"
+    onClick={() =>
+      window.dispatchEvent(new CustomEvent("openProduct", { detail: id }))
+    }
+  >
+    <div className="pm-image-wrap">
+      {hasDiscount && (
+        <span className="pm-badge">-{safeDiscount}%</span>
+      )}
 
-      <h4 style={{ marginTop: 8, fontSize: 16, fontWeight: 600 }}>{title}</h4>
-      {description && <p style={{ fontSize: 13, color: "#555" }}>{description}</p>}
+      {imageUrl && <img src={imageUrl} alt={title} />}
+    </div>
 
-      <div className="price-container" style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 6 }}>
-        <span className="discounted-price" style={{ fontWeight: "bold" }}>{formatNaira(discountedPrice)}</span>
+    <div className="pm-body">
+      <h4 className="pm-title">{title}</h4>
+
+      {description && (
+        <p className="pm-desc">{description}</p>
+      )}
+
+      <div className="pm-price">
+        <span className="pm-new">
+          {formatNaira(discountedPrice)}
+        </span>
+
         {hasDiscount && (
-          <span className="original-price" style={{ textDecoration: "line-through", color: "#888", fontSize: 12 }}>
+          <span className="pm-old">
             {formatNaira(safePrice)}
           </span>
         )}
       </div>
 
-      {/* ⭐ Reviews */}
-      <div style={{ marginTop: 6, fontSize: 12, color: "#333" }}>
+      <div className="pm-review">
         {reviewCount > 0 ? (
-          <>
-            ⭐ {averageRating.toFixed(1)} ({reviewCount} review{reviewCount > 1 ? "s" : ""})
-          </>
+          <>⭐ {averageRating.toFixed(1)} ({reviewCount})</>
         ) : (
-          <>No reviews yet</>
+          <>No reviews</>
         )}
       </div>
-
-      <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-        <button
-          onClick={handleAddToCart}
-          style={{ flex: 1, padding: "6px 0", borderRadius: 6, background: "#28a745", color: "#fff", border: "none", cursor: "pointer", fontWeight: "bold" }}
-        >
-          Add to Cart
-        </button>
-
-        <button
-          onClick={handleWishlist}
-          style={{ width: 36, border: "none", background: "transparent", cursor: "pointer" }}
-        >
-          {isWishlisted ? <FaHeart color="green" /> : <FaRegHeart color="#444" />}
-        </button>
-      </div>
     </div>
-  );
-};
+
+    {/* ❤️ Wishlist */}
+    <button
+      className="pm-wishlist"
+      onClick={(e) => {
+        e.stopPropagation();
+        handleWishlist();
+      }}
+    >
+      {isWishlisted ? <FaHeart color="green" /> : <FaRegHeart />}
+    </button>
+  </div>
+)};
 
 export default ProductCard;
