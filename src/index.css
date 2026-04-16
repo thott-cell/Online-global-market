@@ -638,3 +638,113 @@ form button:hover{
   font-size:14px;
   font-weight:500;
 }
+
+
+
+
+
+
+/* MAIN FOOTER */
+.footer {
+  background: #0f172a;
+  color: #fff;
+  padding: 50px 20px 30px;
+  margin-top: 40px;
+}
+
+/* CONTAINER */
+.footer-container {
+  max-width: 1200px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 30px;
+}
+
+/* SECTIONS */
+.footer-section h4 {
+  margin-bottom: 12px;
+}
+
+.footer-section p {
+  font-size: 14px;
+  opacity: 0.7;
+  margin: 6px 0;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.footer-section p:hover {
+  opacity: 1;
+  transform: translateX(4px);
+}
+
+/* BRAND */
+.logo {
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+.desc {
+  font-size: 14px;
+  opacity: 0.7;
+  margin-bottom: 12px;
+}
+
+/* SOCIALS */
+.socials {
+  display: flex;
+  gap: 10px;
+}
+
+.socials span {
+  background: #1e293b;
+  padding: 8px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.socials span:hover {
+  background: #25D366;
+  transform: scale(1.1);
+}
+
+/* NEWSLETTER */
+.newsletter {
+  display: flex;
+  margin-top: 10px;
+}
+
+.newsletter input {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  outline: none;
+  border-radius: 6px 0 0 6px;
+}
+
+.newsletter button {
+  background: #25D366;
+  color: #fff;
+  border: none;
+  padding: 0 16px;
+  border-radius: 0 6px 6px 0;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* BOTTOM */
+.footer-bottom {
+  text-align: center;
+  margin-top: 30px;
+  font-size: 13px;
+  opacity: 0.6;
+}
+
+/* ❌ HIDE ON MOBILE */
+@media (max-width: 768px) {
+  .footer {
+    display: none;
+  }
+}

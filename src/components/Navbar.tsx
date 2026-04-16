@@ -58,7 +58,7 @@ const Navbar = ({ cartCount, onChangePage, currentPage }: NavbarProps) => {
             style={getButtonStyle("profile")}
             onClick={() => onChangePage("profile")}
           >
-            <i className="fa-solid fa-user"></i> Profile
+            <i className="fa-solid fa-user"></i> Account
           </button>
         </div>
 
@@ -127,7 +127,7 @@ const Navbar = ({ cartCount, onChangePage, currentPage }: NavbarProps) => {
             onClick={() => onChangePage("profile")}
           >
             <i className="fa-solid fa-user"></i>
-            <span>Profile</span>
+            <span>Account</span>
           </button>
         </nav>
       )}

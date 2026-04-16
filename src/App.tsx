@@ -16,6 +16,7 @@ import { WishlistProvider } from "./context/WishlistContext";
 import Navbar from "./components/Navbar";
 import BackButton from "./components/BackButton";
 import SplashScreen from "./components/SplashScreen";
+import DesktopFooter from "./components/DesktopFooter"
 
 const Home = lazy(() => import("./components/Home"));
 const Favorite = lazy(() => import("./components/Favorite"));
@@ -658,6 +659,7 @@ case "chat":
           </Routes>
         </Suspense>
       </main>
+      <DesktopFooter/>
     </>
   );
 }

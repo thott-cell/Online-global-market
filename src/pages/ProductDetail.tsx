@@ -23,6 +23,7 @@ interface Product {
   discount?: number;
   sellerId?: string;
   imageUrl?: string;
+  images?: string[];
 }
 
 const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
@@ -33,6 +34,7 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
   const [loading, setLoading] = useState(true);
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const isInCart = product
     ? cartItems.some((item) => item.id === product.id)
@@ -62,10 +64,21 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
     fetchProduct();
   }, [fetchProduct]);
 
+  useEffect(() => {
+    setCurrentImageIndex(0);
+  }, [product?.id]);
+
   const chatId = useMemo(() => {
     if (!user?.uid || !product?.sellerId) return "";
     return getChatId(user.uid, product.sellerId);
   }, [user?.uid, product?.sellerId]);
+
+  const productImages = useMemo(() => {
+    if (!product) return [];
+    if (product.images && product.images.length > 0) return product.images;
+    if (product.imageUrl) return [product.imageUrl];
+    return [];
+  }, [product]);
 
   if (loading) return <Loading message="Loading product..." />;
 
@@ -97,7 +110,7 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
       discountedPrice,
       discount: product.discount || 0,
       sellerId: product.sellerId || "unknown",
-      imageUrl: product.imageUrl || "",
+      imageUrl: productImages[0] || "",
       quantity: 1,
     });
 
@@ -111,6 +124,18 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
     }
 
     setShowChat((prev) => !prev);
+  };
+
+  const goPrevImage = () => {
+    setCurrentImageIndex((prev) =>
+      prev === 0 ? productImages.length - 1 : prev - 1
+    );
+  };
+
+  const goNextImage = () => {
+    setCurrentImageIndex((prev) =>
+      prev === productImages.length - 1 ? 0 : prev + 1
+    );
   };
 
   return (
@@ -138,18 +163,134 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
         ← Back
       </button>
 
-      {product.imageUrl && (
-        <img
-          src={product.imageUrl}
-          alt={product.title}
-          style={{
-            width: "100%",
-            maxHeight: 300,
-            objectFit: "contain",
-            borderRadius: 8,
-            marginBottom: 16,
-          }}
-        />
+      {productImages.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <div
+            style={{
+              position: "relative",
+              width: "100%",
+              borderRadius: 10,
+              overflow: "hidden",
+              background: "#f8f8f8",
+            }}
+          >
+            <img
+              src={productImages[currentImageIndex]}
+              alt={product.title}
+              style={{
+                width: "100%",
+                height: 300,
+                objectFit: "cover",
+                display: "block",
+              }}
+            />
+
+            {productImages.length > 1 && (
+              <>
+                <button
+                  onClick={goPrevImage}
+                  style={{
+                    position: "absolute",
+                    top: "50%",
+                    left: 10,
+                    transform: "translateY(-50%)",
+                    width: 36,
+                    height: 36,
+                    borderRadius: "50%",
+                    border: "none",
+                    background: "rgba(0,0,0,0.45)",
+                    color: "#fff",
+                    cursor: "pointer",
+                    fontSize: 22,
+                    lineHeight: "36px",
+                  }}
+                >
+                  ‹
+                </button>
+
+                <button
+                  onClick={goNextImage}
+                  style={{
+                    position: "absolute",
+                    top: "50%",
+                    right: 10,
+                    transform: "translateY(-50%)",
+                    width: 36,
+                    height: 36,
+                    borderRadius: "50%",
+                    border: "none",
+                    background: "rgba(0,0,0,0.45)",
+                    color: "#fff",
+                    cursor: "pointer",
+                    fontSize: 22,
+                    lineHeight: "36px",
+                  }}
+                >
+                  ›
+                </button>
+
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: 10,
+                    right: 10,
+                    background: "rgba(0,0,0,0.65)",
+                    color: "#fff",
+                    padding: "5px 10px",
+                    borderRadius: 999,
+                    fontSize: 12,
+                  }}
+                >
+                  {currentImageIndex + 1}/{productImages.length}
+                </div>
+              </>
+            )}
+          </div>
+
+          {productImages.length > 1 && (
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                marginTop: 10,
+                overflowX: "auto",
+                paddingBottom: 4,
+              }}
+            >
+              {productImages.map((img, index) => (
+                <button
+                  key={`${img}-${index}`}
+                  onClick={() => setCurrentImageIndex(index)}
+                  style={{
+                    width: 56,
+                    height: 56,
+                    padding: 0,
+                    borderRadius: 8,
+                    overflow: "hidden",
+                    border:
+                      index === currentImageIndex
+                        ? "2px solid #075E54"
+                        : "1px solid #ddd",
+                    background: "#fff",
+                    cursor: "pointer",
+                    flexShrink: 0,
+                  }}
+                >
+                  <img
+                    src={img}
+                    alt={`thumb-${index}`}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      display: "block",
+                    }}
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       <h2 style={{ marginBottom: 8, fontSize: 20 }}>{product.title}</h2>
@@ -236,9 +377,7 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
         </button>
       )}
 
-      {showChat && product.sellerId && (
-        <ChatBox chatId={chatId} />
-      )}
+      {showChat && product.sellerId && <ChatBox chatId={chatId} />}
 
       <div style={{ marginTop: 24 }}>
         <ReviewSection
