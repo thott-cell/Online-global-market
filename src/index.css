@@ -876,13 +876,13 @@ form button:hover{
   }
   .pm-new {
   font-weight: bold;
-  font-size: 12px;
+  font-size: 11px;
   color: #28a745;
 }
 .pm-old {
   text-decoration: line-through;
   color: #888;
-  font-size: 10px;
+  font-size: 9px;
 }
   .pm-card{
     height: 190px;

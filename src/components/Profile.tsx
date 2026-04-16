@@ -23,7 +23,7 @@ const Profile = ({ onChangePage }: ProfileProps) => {
 
   return (
     <div style={{ maxWidth: 900, margin: "20px auto", padding: "0 16px" }}>
-      <h1 style={{ marginBottom: 16 }}>Profile</h1>
+      <h1 style={{ marginBottom: 16 }}>Account</h1>
 
       {/* User Info */}
       <div
