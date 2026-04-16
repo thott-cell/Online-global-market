@@ -871,7 +871,7 @@ form button:hover{
 @media (max-width:768px){
   .product-grid{
     grid-template-columns: repeat(3, 1fr); /* ✅ clean 2 columns */
-    gap: 10px; /* 🔥 smaller gap */
+    gap: 13px; /* 🔥 smaller gap */
     padding: 10px;
   }
   .pm-card{
