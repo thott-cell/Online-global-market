@@ -780,7 +780,7 @@ case "terms":
           </Routes>
         </Suspense>
       </main>
-      <DesktopFooter/>
+      <DesktopFooter onNavigate={navHandler}/>
     </>
   );
 }

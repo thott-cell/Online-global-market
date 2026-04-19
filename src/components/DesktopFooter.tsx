@@ -1,6 +1,10 @@
 import { FaFacebookF, FaTwitter, FaInstagram, FaLinkedin } from "react-icons/fa";
 
-export default function DesktopFooter() {
+type Props = {
+  onNavigate: (page: string) => void;
+};
+
+export default function DesktopFooter({ onNavigate }: Props) {
   return (
     <footer className="footer">
       <div className="footer-container">
@@ -12,7 +16,6 @@ export default function DesktopFooter() {
             Buy and sell easily within your campus. Fast, safe and reliable.
           </p>
 
-          {/* SOCIALS */}
           <div className="socials">
             <span><FaFacebookF /></span>
             <span><FaTwitter /></span>
@@ -21,25 +24,27 @@ export default function DesktopFooter() {
           </div>
         </div>
 
-        {/* LINKS */}
+        {/* COMPANY */}
         <div className="footer-section">
           <h4>Company</h4>
-          <p>About Us</p>
-          <p>Careers</p>
-          <p>Blog</p>
+          <p onClick={() => onNavigate("about")}>About Us</p>
+          <p onClick={() => onNavigate("careers")}>Careers</p>
+          <p onClick={() => onNavigate("blog")}>Blog</p>
         </div>
 
+        {/* SUPPORT */}
         <div className="footer-section">
           <h4>Support</h4>
-          <p>Help Center</p>
-          <p>Safety Tips</p>
-          <p>Contact Us</p>
+          <p onClick={() => onNavigate("help")}>Help Center</p>
+          <p onClick={() => onNavigate("safety")}>Safety Tips</p>
+          <p onClick={() => onNavigate("contact")}>Contact Us</p>
         </div>
 
+        {/* LEGAL */}
         <div className="footer-section">
           <h4>Legal</h4>
-          <p>Privacy Policy</p>
-          <p>Terms & Conditions</p>
+          <p onClick={() => onNavigate("privacy")}>Privacy Policy</p>
+          <p onClick={() => onNavigate("terms")}>Terms & Conditions</p>
         </div>
 
         {/* NEWSLETTER */}
@@ -48,8 +53,10 @@ export default function DesktopFooter() {
           <p className="desc">Get latest deals and updates</p>
 
           <div className="newsletter">
-            <input placeholder="Enter your email" />
-            <button>Subscribe</button>
+            <input type="email" placeholder="Enter your email" />
+            <button onClick={() => alert("Subscribed (connect backend later)")}>
+              Subscribe
+            </button>
           </div>
         </div>
 
