@@ -918,3 +918,127 @@ form button:hover{
     font-size: 10px;
   }
 }
+
+
+
+
+
+/* support page */
+/* ================= MOBILE HELP (AMAZON/JUMIA STYLE) ================= */
+
+.mobile-help{
+  background:#f5f5f5;
+  min-height:100vh;
+  padding:12px;
+}
+
+/* TITLE */
+.mh-title{
+  font-size:16px;
+  font-weight:600;
+  margin-bottom:12px;
+  color:#111;
+}
+
+/* SECTION CARD */
+.mh-section{
+  background:#fff;
+  border-radius:8px;
+  margin-bottom:12px;
+  overflow:hidden;
+  border:1px solid #eee;
+}
+
+/* SECTION HEADER */
+.mh-section h4{
+  font-size:13px;
+  font-weight:600;
+  padding:10px 12px;
+  background:#fafafa;
+  border-bottom:1px solid #eee;
+  color:#333;
+}
+
+/* LIST ITEMS */
+.mh-section p{
+  font-size:13px;
+  padding:12px;
+  margin:0;
+  border-bottom:1px solid #f1f1f1;
+  cursor:pointer;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+/* REMOVE LAST BORDER */
+.mh-section p:last-child{
+  border-bottom:none;
+}
+
+/* HOVER EFFECT */
+.mh-section p:hover{
+  background:#f9f9f9;
+}
+
+/* SMALL DESCRIPTION */
+.mh-desc{
+  font-size:12px;
+  color:#777;
+  padding:10px 12px;
+}
+
+/* NEWSLETTER */
+.mh-newsletter{
+  display:flex;
+  padding:12px;
+  gap:6px;
+}
+
+.mh-newsletter input{
+  flex:1;
+  padding:10px;
+  border:1px solid #ddd;
+  border-radius:6px;
+  font-size:13px;
+}
+
+.mh-newsletter button{
+  background:#28a745;
+  color:#fff;
+  border:none;
+  padding:10px 14px;
+  border-radius:6px;
+  font-size:13px;
+  font-weight:600;
+}
+
+/* SOCIALS */
+.mh-socials{
+  display:flex;
+  justify-content:center;
+  gap:14px;
+  margin-top:16px;
+}
+
+.mh-socials span{
+  background:#fff;
+  border:1px solid #eee;
+  padding:10px;
+  border-radius:50%;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.mh-socials span:hover{
+  background:#28a745;
+  color:#fff;
+}
+
+/* FOOTER TEXT */
+.mh-bottom{
+  text-align:center;
+  font-size:11px;
+  margin-top:16px;
+  color:#999;
+}

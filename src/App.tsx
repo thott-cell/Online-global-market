@@ -44,6 +44,14 @@ const Categories = lazy(() => import("./pages/Categories"));
 const CategoryProducts = lazy(() => import("./pages/CategoryProducts"));
 const Messages = lazy(() => import("./pages/Messages"));
 const ChatBox = lazy(() => import("./components/ChatBox"));
+const HelpCenter = lazy(() => import("./pages/Help/HelpCenter"));
+const SafetyTips = lazy(() => import("./pages/Help/SafetyTips"));
+const ContactUs = lazy(() => import("./pages/Help/ContactUs"));
+const AboutUs = lazy(() => import("./pages/Help/AboutUs"));
+const Careers = lazy(() => import("./pages/Help/Careers"));
+const Blog = lazy(() => import("./pages/Help/Blog"));
+const PrivacyPolicy = lazy(() => import("./pages/Help/PrivacyPolicy"));
+const Terms = lazy(() => import("./pages/Help/Terms"));
 type Page =
   | "home"
   | "menu"
@@ -70,6 +78,7 @@ type Page =
   | "orderDetail"
   | "messages"
   | "chat";
+
 
 type NavExtra = {
   productId?: string;
@@ -132,6 +141,17 @@ function getCurrentPageKey(pathname: string): string {
   if (pathname.startsWith("/category/")) return "categories";
   if (pathname === "/messages") return "messages";
   if (pathname.startsWith("/chat/")) return "chat";
+  if (pathname.startsWith("/help") ||
+    pathname === "/safety" ||
+    pathname === "/contact" ||
+    pathname === "/about" ||
+    pathname === "/careers" ||
+    pathname === "/blog" ||
+    pathname === "/privacy" ||
+    pathname === "/terms"
+) {
+  return "help";
+}
   return "home";
 }
 
@@ -378,6 +398,37 @@ case "chat":
           navigate("/orders");
         }
         return;
+        case "helpCenter":
+  navigate("/help-center");
+  return;
+
+case "safety":
+  navigate("/safety");
+  return;
+
+case "contact":
+  navigate("/contact");
+  return;
+
+case "about":
+  navigate("/about");
+  return;
+
+case "careers":
+  navigate("/careers");
+  return;
+
+case "blog":
+  navigate("/blog");
+  return;
+
+case "privacy":
+  navigate("/privacy");
+  return;
+
+case "terms":
+  navigate("/terms");
+  return;
       default:
         navigate("/");
     }
@@ -577,15 +628,14 @@ case "chat":
               }
             />
 
-            <Route
-              path="/help"
-              element={
-                <PageShell title={pageNames.help} onBack={handleBack}>
-                  <HelpSupport />
-                </PageShell>
-              }
-            />
-
+           <Route
+  path="/help"
+  element={
+    <PageShell title={pageNames.help} onBack={handleBack}>
+      <HelpSupport onNavigate={navHandler} />
+    </PageShell>
+  }
+/>
             <Route
               path="/checkout"
               element={
@@ -656,6 +706,77 @@ case "chat":
                 />
               }
             />
+            <Route
+  path="/help-center"
+  element={
+    <PageShell title="Help Center" onBack={handleBack}>
+      <HelpCenter />
+    </PageShell>
+  }
+/>
+
+<Route
+  path="/safety"
+  element={
+    <PageShell title="Safety Tips" onBack={handleBack}>
+      <SafetyTips />
+    </PageShell>
+  }
+/>
+
+<Route
+  path="/contact"
+  element={
+    <PageShell title="Contact Us" onBack={handleBack}>
+      <ContactUs />
+    </PageShell>
+  }
+/>
+
+<Route
+  path="/about"
+  element={
+    <PageShell title="About Us" onBack={handleBack}>
+      <AboutUs />
+    </PageShell>
+  }
+/>
+
+<Route
+  path="/careers"
+  element={
+    <PageShell title="Careers" onBack={handleBack}>
+      <Careers />
+    </PageShell>
+  }
+/>
+
+<Route
+  path="/blog"
+  element={
+    <PageShell title="Blog" onBack={handleBack}>
+      <Blog />
+    </PageShell>
+  }
+/>
+
+<Route
+  path="/privacy"
+  element={
+    <PageShell title="Privacy Policy" onBack={handleBack}>
+      <PrivacyPolicy />
+    </PageShell>
+  }
+/>
+
+<Route
+  path="/terms"
+  element={
+    <PageShell title="Terms & Conditions" onBack={handleBack}>
+      <Terms />
+    </PageShell>
+  }
+/>
           </Routes>
         </Suspense>
       </main>
