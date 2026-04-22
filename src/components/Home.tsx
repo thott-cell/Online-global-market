@@ -22,6 +22,8 @@ interface Product {
   discount?: number;
   sellerId?: string;
   imageUrl?: string;
+  stock?: number;
+  initialStock?: number;
 }
 
 type HomeProps = {
@@ -174,6 +176,9 @@ const Home = ({ onSelectProduct, onChangePage }: HomeProps) => {
                 description={product.description}
                 sellerId={product.sellerId}
                 discount={product.discount}
+                stock={product.stock}
+                
+                initialStock={product.initialStock}
               />
             </div>
           ))}

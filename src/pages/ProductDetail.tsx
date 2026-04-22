@@ -1,3 +1,4 @@
+// src/components/ProductDetail.tsx
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { db } from "../firebase/config";
 import { doc, getDoc } from "firebase/firestore";
@@ -24,6 +25,7 @@ interface Product {
   sellerId?: string;
   imageUrl?: string;
   images?: string[];
+  stock?: number;
 }
 
 const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
@@ -35,10 +37,6 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-  const isInCart = product
-    ? cartItems.some((item) => item.id === product.id)
-    : false;
 
   const fetchProduct = useCallback(async () => {
     setLoading(true);
@@ -80,6 +78,12 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
     return [];
   }, [product]);
 
+  const safeStock = Number.isFinite(Number(product?.stock))
+    ? Math.max(0, Number(product?.stock))
+    : 0;
+
+  const isOutOfStock = safeStock <= 0;
+
   if (loading) return <Loading message="Loading product..." />;
 
   if (!product) {
@@ -94,8 +98,15 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
     ? Math.round(product.price - (product.price * product.discount) / 100)
     : product.price;
 
+  const isInCart = cartItems.some((item) => item.id === product.id);
+
   const handleAddToCart = () => {
     if (!product) return;
+
+    if (isOutOfStock) {
+      toast("This product is out of stock", { icon: "⚠️" });
+      return;
+    }
 
     if (isInCart) {
       toast("Product is already in your cart", { icon: "🛒" });
@@ -112,6 +123,7 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
       sellerId: product.sellerId || "unknown",
       imageUrl: productImages[0] || "",
       quantity: 1,
+      stock: safeStock,
     });
 
     toast.success("Product added to cart!");
@@ -182,6 +194,7 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
                 height: 300,
                 objectFit: "cover",
                 display: "block",
+                opacity: isOutOfStock ? 0.75 : 1,
               }}
             />
 
@@ -245,6 +258,24 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
                 </div>
               </>
             )}
+
+            {isOutOfStock && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 10,
+                  left: 10,
+                  background: "#dc2626",
+                  color: "#fff",
+                  padding: "6px 10px",
+                  borderRadius: 999,
+                  fontSize: 12,
+                  fontWeight: 700,
+                }}
+              >
+                Out of stock
+              </div>
+            )}
           </div>
 
           {productImages.length > 1 && (
@@ -301,6 +332,7 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
           alignItems: "center",
           gap: 10,
           marginBottom: 12,
+          flexWrap: "wrap",
         }}
       >
         <span
@@ -317,6 +349,21 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
         {product.discount && (
           <span style={{ fontSize: 18, fontWeight: "bold", color: "green" }}>
             {formatNaira(discountedPrice)}
+          </span>
+        )}
+
+        {!isOutOfStock && (
+          <span
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              color: "#075E54",
+              background: "#e7f7f2",
+              padding: "5px 10px",
+              borderRadius: 999,
+            }}
+          >
+            {safeStock} unit{safeStock === 1 ? "" : "s"} left
           </span>
         )}
       </div>
@@ -342,20 +389,21 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
 
       <button
         onClick={handleAddToCart}
-        disabled={isInCart}
+        disabled={isOutOfStock || isInCart}
         style={{
           width: "100%",
           padding: "12px 0",
-          background: isInCart ? "#aaa" : "#28a745",
+          background: isOutOfStock ? "#aaa" : isInCart ? "#aaa" : "#28a745",
           color: "#fff",
           border: "none",
           borderRadius: 6,
-          cursor: isInCart ? "not-allowed" : "pointer",
+          cursor:
+            isOutOfStock || isInCart ? "not-allowed" : "pointer",
           fontWeight: "bold",
           fontSize: 16,
         }}
       >
-        {isInCart ? "Already in Cart" : "Add to Cart"}
+        {isOutOfStock ? "Out of Stock" : isInCart ? "Already in Cart" : "Add to Cart"}
       </button>
 
       {product.sellerId && (

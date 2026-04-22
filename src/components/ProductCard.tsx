@@ -1,10 +1,10 @@
 // src/components/ProductCard.tsx
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../utils/wishlist";
-import { getProductReviews} from "../firebase/reviews";
+import { getProductReviews } from "../firebase/reviews";
 
 interface ProductCardProps {
   id: string;
@@ -15,6 +15,8 @@ interface ProductCardProps {
   sellerId?: string;
   discount?: number;
   category?: string;
+  stock?: number;
+  initialStock?: number;
 }
 
 interface Review {
@@ -33,6 +35,8 @@ const ProductCard = ({
   description,
   sellerId,
   discount,
+  stock,
+  initialStock,
 }: ProductCardProps) => {
   useCart();
   const { wishlist, addToWishlist, removeFromWishlist } = useWishlist();
@@ -53,7 +57,23 @@ const ProductCard = ({
   const formatNaira = (amount: number) =>
     `₦${amount.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`;
 
-  // 🔄 Load reviews
+  const totalStock = Number.isFinite(Number(initialStock))
+    ? Math.max(0, Number(initialStock))
+    : Number.isFinite(Number(stock))
+      ? Math.max(0, Number(stock))
+      : 0;
+
+  const remainingUnits = Number.isFinite(Number(stock))
+    ? Math.max(0, Number(stock))
+    : 0;
+
+  const isOutOfStock = remainingUnits <= 0;
+
+  const remainingPercentage = useMemo(() => {
+    if (totalStock <= 0) return 0;
+    return (remainingUnits / totalStock) * 100;
+  }, [remainingUnits, totalStock]);
+
   useEffect(() => {
     let mounted = true;
 
@@ -61,9 +81,10 @@ const ProductCard = ({
       try {
         const reviews: Review[] = await getProductReviews(id);
         const count = reviews.length;
-        const avg = count > 0
-          ? reviews.reduce((sum, r) => sum + r.rating, 0) / count
-          : 0;
+        const avg =
+          count > 0
+            ? reviews.reduce((sum, r) => sum + r.rating, 0) / count
+            : 0;
 
         if (mounted) {
           setReviewCount(count);
@@ -99,64 +120,114 @@ const ProductCard = ({
       discountedPrice,
     });
 
+    if (isOutOfStock) {
+      toast("Added to wishlist. This item is out of stock.", { icon: "⚠️" });
+      return;
+    }
+
     toast.success("Added to wishlist");
   };
 
+  const handleOpenProduct = () => {
+    if (isOutOfStock) {
+      toast("This product is out of stock", { icon: "⚠️" });
+      return;
+    }
+
+    window.dispatchEvent(new CustomEvent("openProduct", { detail: id }));
+  };
 
   return (
-  <div
-    className="pm-card"
-    onClick={() =>
-      window.dispatchEvent(new CustomEvent("openProduct", { detail: id }))
-    }
-  >
-    <div className="pm-image-wrap">
-      {hasDiscount && (
-        <span className="pm-badge">-{safeDiscount}%</span>
-      )}
-
-      {imageUrl && <img src={imageUrl} alt={title} />}
-    </div>
-
-    <div className="pm-body">
-      <h4 className="pm-title">{title}</h4>
-
-      {description && (
-        <p className="pm-desc">{description}</p>
-      )}
-
-      <div className="pm-price">
-        <span className="pm-new">
-          {formatNaira(discountedPrice)}
-        </span>
-
-        {hasDiscount && (
-          <span className="pm-old">
-            {formatNaira(safePrice)}
-          </span>
-        )}
-      </div>
-
-      <div className="pm-review">
-        {reviewCount > 0 ? (
-          <>⭐ {averageRating.toFixed(1)} ({reviewCount})</>
-        ) : (
-          <>No reviews</>
-        )}
-      </div>
-    </div>
-
-    {/* ❤️ Wishlist */}
-    <button
-      className="pm-wishlist"
-      onClick={(e) => {
-        e.stopPropagation();
-        handleWishlist();
+    <div
+      className="pm-card"
+      onClick={handleOpenProduct}
+      style={{
+        opacity: isOutOfStock ? 0.72 : 1,
+        position: "relative",
+        cursor: isOutOfStock ? "not-allowed" : "pointer",
       }}
     >
-      {isWishlisted ? <FaHeart color="green" /> : <FaRegHeart />}
-    </button>
-  </div>
-)};
+      <div className="pm-image-wrap" style={{ position: "relative" }}>
+        {hasDiscount && <span className="pm-badge">-{safeDiscount}%</span>}
+        {imageUrl && <img src={imageUrl} alt={title} />}
+      </div>
+
+      <div className="pm-body">
+        <h4 className="pm-title">{title}</h4>
+
+        {description && <p className="pm-desc">{description}</p>}
+
+        <div className="pm-price">
+          <span className="pm-new">{formatNaira(discountedPrice)}</span>
+          {hasDiscount && <span className="pm-old">{formatNaira(safePrice)}</span>}
+        </div>
+
+        <div className="pm-review">
+          {reviewCount > 0 ? (
+            <>⭐ {averageRating.toFixed(1)} ({reviewCount})</>
+          ) : (
+            <>No reviews</>
+          )}
+        </div>
+
+        <div style={{ marginTop: 8 }}>
+          {isOutOfStock ? (
+            <span
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                color: "#dc2626",
+              }}
+            >
+              Out of stock
+            </span>
+          ) : (
+            <>
+              <div
+                style={{
+                  fontSize: 12,
+                  color: "#4b5563",
+                  marginBottom: 5,
+                  fontWeight: 600,
+                }}
+              >
+                {remainingUnits} unit{remainingUnits === 1 ? "" : "s"} left
+              </div>
+
+              <div
+                style={{
+                  width: "100%",
+                  height: 6,
+                  background: "#e5e7eb",
+                  borderRadius: 999,
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    width: `${remainingPercentage}%`,
+                    height: "100%",
+                    background: remainingPercentage >= 80 ? "#25a244" : "#dc2626",
+                    transition: "width 0.3s ease",
+                  }}
+                />
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      <button
+        className="pm-wishlist"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleWishlist();
+        }}
+      >
+        {isWishlisted ? <FaHeart color="green" /> : <FaRegHeart />}
+      </button>
+    </div>
+  );
+};
 
 export default ProductCard;

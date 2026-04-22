@@ -29,6 +29,7 @@ const SellerAddProduct = () => {
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState<number | "">("");
   const [discount, setDiscount] = useState<number | "">("");
+  const [stock, setStock] = useState<number | "">("");
   const [category, setCategory] = useState<CategoryName | "">("");
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
@@ -123,6 +124,11 @@ const SellerAddProduct = () => {
       return;
     }
 
+    if (stock === "" || stock <= 0) {
+      toast.error("Please enter available units.");
+      return;
+    }
+
     if (!category || !CATEGORIES.some((c) => c.name === category)) {
       setCategoryError(true);
       toast.error("Please select a valid category.");
@@ -138,7 +144,9 @@ const SellerAddProduct = () => {
     setLoading(true);
 
     try {
-      const images = await Promise.all(imageFiles.map((file) => uploadImage(file)));
+      const images = await Promise.all(
+        imageFiles.map((file) => uploadImage(file))
+      );
       const imageUrl = images[0] || "";
 
       await addDoc(collection(db, "products"), {
@@ -146,6 +154,9 @@ const SellerAddProduct = () => {
         description: description.trim(),
         price: Number(price),
         discount: discount ? Number(discount) : 0,
+        stock: Number(stock),
+        initialStock: Number(stock),
+        sold: 0,
         imageUrl,
         images,
         status: "pending",
@@ -160,6 +171,7 @@ const SellerAddProduct = () => {
       setDescription("");
       setPrice("");
       setDiscount("");
+      setStock("");
       setCategory("");
       setImageFiles([]);
       setImagePreviews([]);
@@ -225,6 +237,16 @@ const SellerAddProduct = () => {
               style={styles.input}
             />
           </div>
+
+          <input
+            type="number"
+            placeholder="Available Units (e.g. 20)"
+            value={stock}
+            onChange={(e) =>
+              setStock(e.target.value ? Number(e.target.value) : "")
+            }
+            style={styles.input}
+          />
 
           <select
             value={category}
@@ -343,7 +365,7 @@ const SellerAddProduct = () => {
         </div>
       </div>
 
-      {(title || description || price) && (
+      {(title || description || price || stock) && (
         <div style={styles.previewCard}>
           <div style={styles.previewHeader}>
             <h3 style={{ margin: 0 }}>Live Preview</h3>
@@ -379,6 +401,25 @@ const SellerAddProduct = () => {
             ) : (
               <span style={styles.newPrice}>₦{Number(price || 0).toFixed(2)}</span>
             )}
+          </div>
+
+          <div style={styles.stockWrap}>
+            <p style={styles.stockText}>
+              {stock && Number(stock) > 0
+                ? `${Number(stock)} units available`
+                : "No stock selected yet"}
+            </p>
+            <div style={styles.stockBar}>
+              <div
+                style={{
+                  ...styles.stockFill,
+                  width:
+                    stock && Number(stock) > 0
+                      ? "100%"
+                      : "0%",
+                }}
+              />
+            </div>
           </div>
         </div>
       )}
@@ -694,6 +735,28 @@ const createStyles = (isMobile: boolean): Record<string, React.CSSProperties> =>
     fontSize: 18,
     color: "#16a34a",
     fontWeight: 900,
+  },
+  stockWrap: {
+    marginTop: 16,
+  },
+  stockText: {
+    margin: "0 0 6px",
+    fontSize: 13,
+    color: "#374151",
+    fontWeight: 600,
+  },
+  stockBar: {
+    width: "100%",
+    height: 7,
+    borderRadius: 999,
+    background: "#e5e7eb",
+    overflow: "hidden",
+  },
+  stockFill: {
+    height: "100%",
+    borderRadius: 999,
+    background: "#25a244",
+    transition: "width 0.3s ease",
   },
 });
 
