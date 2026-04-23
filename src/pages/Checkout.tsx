@@ -236,7 +236,11 @@ const Checkout = ({ setCurrentPage }: CheckoutProps) => {
 
       toast.success("Order placed!");
       clearCart();
-      setCurrentPage?.("orderSuccess");
+      sessionStorage.setItem("last_order_success", Date.now().toString());
+      setCurrentPage?.("orderSuccess", {
+  orderId: generateOrderId(),
+  fromCheckout: true,
+});
     } catch (err) {
       console.error(err);
       toast.error(err instanceof Error ? err.message : "Order failed");

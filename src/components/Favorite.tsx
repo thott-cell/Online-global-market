@@ -15,7 +15,7 @@ import {
 } from "firebase/firestore";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { FaTrashAlt, FaHeart } from "react-icons/fa";
+import { FaTrashAlt } from "react-icons/fa";
 
 interface WishlistProduct {
   id: string;

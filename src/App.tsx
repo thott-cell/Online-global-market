@@ -685,7 +685,7 @@ case "terms":
               path="/categories"
               element={
                 <PageShell title={pageNames.categories} onBack={handleBack}>
-                  <Categories onChangePage={(p: string) => navHandler(p)} />
+                  <Categories/>
                 </PageShell>
               }
             />
