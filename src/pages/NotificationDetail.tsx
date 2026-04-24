@@ -65,9 +65,6 @@ const NotificationDetail = ({ notificationId }: Props) => {
     );
   }
 
-  const formattedDate = notification.createdAt?.toDate
-    ? notification.createdAt.toDate().toLocaleString()
-    : "";
 
  return (
   <div className="notification-page">
