@@ -36,7 +36,7 @@ const OrderDetail = ({ orderId, onBack }: OrderDetailProps) => {
 
       {/* CARD */}
       <div style={styles.card}>
-        <h2 style={styles.title}>Order #{order.id}</h2>
+        <h2 style={styles.title}>Order: {order.orderId ?? order.id}</h2>
         <p style={styles.total}>₦{totalAmount?.toLocaleString()}</p>
 
         {/* TRACKING */}

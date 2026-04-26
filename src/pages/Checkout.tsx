@@ -175,28 +175,39 @@ const Checkout = ({ setCurrentPage }: CheckoutProps) => {
     setLoading(true);
 
     try {
-      await runTransaction(db, async (transaction) => {
-        for (const item of cartItems) {
-          const productRef = doc(db, "products", item.id);
-          const productSnap = await transaction.get(productRef);
+     await runTransaction(db, async (transaction) => {
+  const updates: { ref: any; newStock: number }[] = [];
 
-          if (!productSnap.exists()) {
-            throw new Error(`${item.title} not found`);
-          }
+  // STEP 1: READ
+  for (const item of cartItems) {
+    const productRef = doc(db, "products", item.id);
+    const productSnap = await transaction.get(productRef);
 
-          const productData = productSnap.data() as { stock?: unknown };
-          const currentStock = toNumber(productData.stock);
-          const requestedQuantity = toNumber(item.quantity);
+    if (!productSnap.exists()) {
+      throw new Error(`${item.title} not found`);
+    }
 
-          if (currentStock < requestedQuantity) {
-            throw new Error(`${item.title} is out of stock`);
-          }
+    const productData = productSnap.data() as { stock?: number };
+    const currentStock = productData.stock ?? 0;
+    const requestedQuantity = Number(item.quantity);
 
-          transaction.update(productRef, {
-            stock: currentStock - requestedQuantity,
-          });
-        }
-      });
+    if (currentStock < requestedQuantity) {
+      throw new Error(`${item.title} is out of stock`);
+    }
+
+    updates.push({
+      ref: productRef,
+      newStock: currentStock - requestedQuantity,
+    });
+  }
+
+  // STEP 2: WRITE
+  updates.forEach((u) => {
+    transaction.update(u.ref, {
+      stock: u.newStock,
+    });
+  });
+});
 
       const products = cartItems.map((item) => {
         const originalPrice = getOriginalPrice(item);
@@ -214,31 +225,33 @@ const Checkout = ({ setCurrentPage }: CheckoutProps) => {
           hasDiscount: effectivePrice < originalPrice,
         };
       });
+      const orderId = generateOrderId()
 
-      await addDoc(collection(db, "orders"), {
-        orderId: generateOrderId(),
-        userId: user.uid,
-        products,
-        itemsTotal,
-        deliveryFee: DELIVERY_FEE,
-        total,
-        status: "pending",
-        paymentMethod: "Pay on Delivery",
-        address: {
-          name: address.name,
-          phone: address.phone,
-          street: address.street,
-          city: address.city,
-          state: address.state,
-        },
-        createdAt: serverTimestamp(),
-      });
+     const orderRef = await addDoc(collection(db, "orders"), {
+  orderId,
+  userId: user.uid,
+  products,
+  itemsTotal,
+  deliveryFee: DELIVERY_FEE,
+  total,
+  status: "pending",
+  paymentMethod: "Pay on Delivery",
+  address: {
+    name: address.name,
+    phone: address.phone,
+    street: address.street,
+    city: address.city,
+    state: address.state,
+  },
+  createdAt: serverTimestamp(),
+});
 
       toast.success("Order placed!");
       clearCart();
       sessionStorage.setItem("last_order_success", Date.now().toString());
       setCurrentPage?.("orderSuccess", {
-  orderId: generateOrderId(),
+  orderId,
+  docId: orderRef.id,
   fromCheckout: true,
 });
     } catch (err) {

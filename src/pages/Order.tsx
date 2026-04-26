@@ -18,6 +18,7 @@ interface OrderProduct {
 }
 
 interface Order {
+  orderId: string;
   id: string;
   status: "pending" |  "processing" | "dispatch" | "delivered";
   createdAt?: any;
@@ -130,7 +131,7 @@ const Orders = ({ setCurrentPage }: OrdersProps) => {
             }}
           >
             <div>
-              <div style={{ fontWeight: 600 }}>Order #{order.id}</div>
+              <div style={{ fontWeight: 600 }}>Order: {order.orderId ?? order.id}</div>
 
               <div style={{ fontSize: 13, color: "#666" }}>
                 {formatAmount(total)}
