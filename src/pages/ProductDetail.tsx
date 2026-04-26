@@ -66,6 +66,22 @@ const ProductDetail = ({ productId, onBack }: ProductDetailProps) => {
     setCurrentImageIndex(0);
   }, [product?.id]);
 
+
+
+  
+  useEffect(() => {
+  if (!productId) return;
+
+  const viewed = JSON.parse(localStorage.getItem("recentProducts") || "[]");
+
+  const updated = [
+    productId,
+    ...viewed.filter((id: string) => id !== productId),
+  ].slice(0, 10);
+
+  localStorage.setItem("recentProducts", JSON.stringify(updated));
+}, [productId]);
+
   const chatId = useMemo(() => {
     if (!user?.uid || !product?.sellerId) return "";
     return getChatId(user.uid, product.sellerId);

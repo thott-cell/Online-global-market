@@ -24,6 +24,7 @@ interface Product {
   imageUrl?: string;
   stock?: number;
   initialStock?: number;
+  category?: string
 }
 
 type HomeProps = {
@@ -31,12 +32,15 @@ type HomeProps = {
   onChangePage: (page: "home" | "menu" | "deals" | "profile" | "signup" | "login") => void;
 };
 
+
+
 const Home = ({ onSelectProduct, onChangePage }: HomeProps) => {
   const { user, loading: authLoading } = useAuth();
   const { searchTerm } = useSearch();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [recentProducts, setRecentProducts] = useState<Product[]>([]);
 
   const navigate = useNavigate();
 
@@ -82,6 +86,33 @@ const Home = ({ onSelectProduct, onChangePage }: HomeProps) => {
       product.title.toLowerCase().includes(term)
     );
   }, [products, searchTerm]);
+
+
+
+
+
+  useEffect(() => {
+  const ids = JSON.parse(localStorage.getItem("recentProducts") || "[]");
+
+  const matched = products.filter((p) => ids.includes(p.id));
+
+  setRecentProducts(matched);
+}, [products]);
+
+const recommendedProducts = useMemo(() => {
+  if (recentProducts.length === 0) return [];
+
+  const lastViewed = recentProducts[0];
+  if (!lastViewed?.category) return [];
+
+  return products
+    .filter(
+      (p) =>
+        p.category === lastViewed.category &&
+        p.id !== lastViewed.id
+    )
+    .slice(0, 6);
+}, [products, recentProducts]);
 
   const featuredProducts = products.slice(0, 4);
 
@@ -156,6 +187,9 @@ const Home = ({ onSelectProduct, onChangePage }: HomeProps) => {
         </div>
       )}
 
+      {recentProducts.length > 0 && (
+  <>
+   
       {!loadingProducts && filteredProducts.length === 0 && (
         <p className="no-products">No products match your search.</p>
       )}
@@ -184,12 +218,65 @@ const Home = ({ onSelectProduct, onChangePage }: HomeProps) => {
           ))}
         </div>
       )}
+       <h2 className="section-title">Recently Viewed</h2>
+
+    <div className="product-grid">
+      {recentProducts.map((product) => (
+        <div
+          key={product.id}
+          onClick={() => handleProductClick(product.id)}
+          style={{ cursor: "pointer" }}
+        >
+          <ProductCard {...product} />
+        </div>
+      ))}
+    </div>
+  </>
+)}
+{recommendedProducts.length > 0 && (
+  <>
+    <h2 className="section-title">Recommended for You</h2>
+
+    <div className="product-grid">
+      {recommendedProducts.map((product) => (
+        <div
+          key={product.id}
+          onClick={() => handleProductClick(product.id)}
+          style={{ cursor: "pointer" }}
+        >
+          <ProductCard
+            id={product.id}
+            title={product.title}
+            price={product.price}
+            imageUrl={product.imageUrl}
+            description={product.description}
+            sellerId={product.sellerId}
+            discount={product.discount}
+            stock={product.stock}
+            initialStock={product.initialStock}
+          />
+        </div>
+      ))}
+    </div>
+  </>
+)}
+
 
       <style>{`
         .hero-carousel {
           width: 100%;
           margin: 12px 0 14px;
         }
+         .section-title {
+  background: #28a745;
+  color: #fff;
+  font-weight: 500;
+  padding: 12px 16px;
+  margin: 18px 0 10px;
+  border-radius: 6px;
+  width: 100%;
+  display: block;
+}
 
         .hero-swiper {
           width: 100%;
