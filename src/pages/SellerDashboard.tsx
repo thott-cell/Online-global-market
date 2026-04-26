@@ -12,6 +12,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  increment,
 } from "firebase/firestore";
 import toast from "react-hot-toast";
 
@@ -147,6 +148,11 @@ const SellerDashboard = () => {
       where("sellerId", "==", user.uid),
       orderBy("createdAt", "desc")
     );
+
+
+
+   
+  
 
     const unsubProducts = onSnapshot(
       productsQuery,
@@ -319,6 +325,27 @@ const SellerDashboard = () => {
     return <div style={{ padding: 40 }}>Access denied</div>;
   }
 
+  const handleRestock = async (productId: string, amount: number) => {
+  try {
+    if (!amount || amount <= 0) {
+      toast.error("Invalid stock amount");
+      return;
+    }
+
+    const productRef = doc(db, "products", productId);
+
+    await updateDoc(productRef, {
+      stock: increment(amount),
+    });
+
+    toast.success(`Stock increased by ${amount}`);
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to restock product");
+  }
+};
+
+  
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "20px 15px 90px" }}>
       <h2 style={{ marginBottom: 16 }}>Seller Dashboard</h2>
@@ -383,6 +410,23 @@ const SellerDashboard = () => {
               >
                 {p.status.toUpperCase()}
               </div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+  <button onClick={() => handleRestock(p.id, 5)} style={btnStyle}>+5</button>
+  <button onClick={() => handleRestock(p.id, 10)} style={btnStyle}>+10</button>
+  <button onClick={() => handleRestock(p.id, 20) } style={btnStyle}>+20</button>
+</div>
+
+<input
+  type="number"
+  placeholder="Custom stock..."
+  onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      handleRestock(p.id, Number(e.currentTarget.value));
+      e.currentTarget.value = "";
+    }
+  }}
+  style={{ marginTop: 8, padding: 6, width: "100px" }}
+/>
             </div>
           ))}
         </div>
@@ -565,5 +609,15 @@ const SellerDashboard = () => {
     </div>
   );
 };
-
+const btnStyle: React.CSSProperties = {
+  padding: "6px 10px",
+  borderRadius: 6,
+  border: "none",
+  background: "#ff7a00",
+  color: "#fff",
+  fontWeight: 700,
+  cursor: "pointer",
+  fontSize: 12,
+};
 export default SellerDashboard;
+
